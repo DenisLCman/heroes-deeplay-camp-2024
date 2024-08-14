@@ -44,16 +44,13 @@ public class TreeBuilder {
     @SneakyThrows
     public Stats buildGameTree(final GameState root, int depth, int maxDepth){
         if(firstRootStart){
-            if(maxDepth == 0){
-                maxDepth = 100;
-            }
             stats.maxDepth = maxDepth;
             stats.workTimeMS = System.currentTimeMillis();
             firstRootStart = false;
         }
         List<MakeMoveEvent> movesRoot = root.getPossibleMoves();
         stats.numNodes++;
-        if(depth == stats.maxDepth){
+        if(maxDepth != 0 && depth == stats.maxDepth){
             stats.numTerminalNodes++;
         } else if (movesRoot.isEmpty()) {
             if (root.getGameStage() != GameStage.ENDED) {
@@ -69,15 +66,15 @@ public class TreeBuilder {
                 }
             }
         } else {
-            stats.coefBranch+=((double) movesRoot.size()/23);
             for (MakeMoveEvent moveEvent : movesRoot) {
                 GameState nodeGameState = root.getCopy();
                 nodeGameState.makeMove(moveEvent);
                 buildGameTree(nodeGameState, depth+1, maxDepth);
             }
         }
-
-        stats.depth = depth;
+        if(depth > stats.depth){
+            stats.depth = depth;
+        }
         return stats;
     }
 }

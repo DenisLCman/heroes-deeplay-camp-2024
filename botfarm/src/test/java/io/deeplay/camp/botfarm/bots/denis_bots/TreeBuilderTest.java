@@ -102,7 +102,7 @@ class TreeBuilderTest {
 
 
             TreeBuilder treeBuilder = new TreeBuilder();
-            TreeBuilder.Stats stats = treeBuilder.buildGameTree(gameStateTest,0,3);
+            TreeBuilder.Stats stats = treeBuilder.buildGameTree(gameStateTest,0,2);
             assertEquals(stats.getDepth(),2);
 
         }catch (GameException e){
