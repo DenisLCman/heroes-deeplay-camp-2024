@@ -4,4 +4,5 @@ module io.deeplay.camp.server {
   requires io.deeplay.camp.core;
   requires static lombok;
   requires com.fasterxml.jackson.core;
+  requires io.deeplay.camp.botfarm;
 }

@@ -84,16 +84,20 @@ public abstract class Unit implements GeneralBuff {
     this.damage = damage;
   }
 
-  protected void setAccuracy(int accuracy) {
+  public void setAccuracy(int accuracy) {
     this.accuracy = accuracy;
   }
 
-  protected void setArmor(int armor) {
+  public void setArmor(int armor) {
     this.armor = armor;
   }
 
   public void setMoved(boolean isMoved) {
     this.isMoved = isMoved;
+  }
+
+  public void setHitTarget(boolean hitTarget) {
+    this.hitTarget = hitTarget;
   }
 
   public boolean isAlive() {

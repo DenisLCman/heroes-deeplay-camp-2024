@@ -2,7 +2,10 @@ package io.deeplay.camp.botfarm;
 
 
 import io.deeplay.camp.botfarm.bots.RandomBot;
+import io.deeplay.camp.botfarm.bots.denis_bots.*;
 import io.deeplay.camp.game.exceptions.GameException;
+import io.deeplay.camp.game.mechanics.GameState;
+import io.deeplay.camp.game.mechanics.PlayerType;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -14,18 +17,35 @@ import java.nio.file.Paths;
 
 public class Main {
 
-  static String path = "C:\\Deeplay\\deeplay-heroes\\botfarm\\src\\main\\java\\io\\deeplay\\camp\\botfarm";
+  static String path = "C:\\Deeplay\\heroes-deeplay-camp-2024\\botfarm\\src\\main\\java\\io\\deeplay\\camp\\botfarm";
 
   public static void main(String[] args) throws IOException {
 
     deleteFilesForPathByPrefix(path, "resultgame");
+    //TreeBuilderFun();
+    BotFightFun();
+  }
+  public static void TreeBuilderFun(){
+    GameState gameState = new GameState();
+    gameState.setDefaultPlacement();
+    TreeBuilder treeBuilder = new TreeBuilder();
+    TreeBuilder.Stats stats = treeBuilder.buildGameTree(gameState, 0, 5);
+    long endTreeBuilder = System.currentTimeMillis();
+    System.out.println("Количество узлов = " + stats.getNumNodes());
+    System.out.println("Количество терминальных узлов = " + stats.getNumTerminalNodes());
+    System.out.println("Время сбора стастистики = " + (endTreeBuilder - stats.getWorkTimeMS()));
+    System.out.println("Максимальная глубина дерева = " + stats.getMaxDepth());
+    System.out.println("Победы 1 игрока = " + stats.getWinRateFirst());
+    System.out.println("Победы 2 игрока = " + stats.getWinRateSecond());
+    System.out.println("Количесество ничьей = " + stats.getWinRateDraw());
+  }
 
-    RandomBot bot1 = new RandomBot();
+  public static void BotFightFun() throws IOException {
+    PlaceABMinMaxBot bot1 = new PlaceABMinMaxBot(PlayerType.FIRST_PLAYER, 4);
     RandomBot bot2 = new RandomBot();
     for(int i = 0; i<1;i++){
-      BotFight fight = new BotFight(bot1, bot2, 50, true);
+      BotFight fight = new BotFight(bot1, bot2, 100, true);
     }
-
   }
 
   public static boolean deleteFilesForPathByPrefix(final String path, final String prefix) {
