@@ -9,14 +9,14 @@ import java.util.UUID;
 @Getter
 @NoArgsConstructor
 public class ErrorGameResponseDto extends ServerDto {
-  private ErrorCode errorCode;
-  private String message;
-  private UUID gamePartyId;
+    private ErrorCode errorCode;
+    private String message;
+    private UUID gamePartyId;
 
-  public ErrorGameResponseDto(ErrorCode errorCode, String message, UUID gamePartyId) {
-    super(ServerDtoType.ERROR_GAME_INFO);
-    this.errorCode = errorCode;
-    this.message = message;
-    this.gamePartyId = gamePartyId;
-  }
+    public ErrorGameResponseDto(ErrorCode errorCode, String message, UUID gamePartyId) {
+        super(ServerDtoType.ERROR_GAME_INFO);
+        this.errorCode = errorCode;
+        this.message = message;
+        this.gamePartyId = gamePartyId;
+    }
 }
