@@ -41,8 +41,8 @@ public class Main {
   }
 
   public static void BotFightFun() throws IOException {
-    PlaceABMinMaxBot bot1 = new PlaceABMinMaxBot(PlayerType.FIRST_PLAYER, 4);
-    RandomBot bot2 = new RandomBot();
+    PlaceExpMaxBot bot1 = new PlaceExpMaxBot(PlayerType.FIRST_PLAYER, 3);
+    ABMinMaxBot bot2 = new ABMinMaxBot(PlayerType.SECOND_PLAYER, 3);
     for(int i = 0; i<1;i++){
       BotFight fight = new BotFight(bot1, bot2, 100, true);
     }

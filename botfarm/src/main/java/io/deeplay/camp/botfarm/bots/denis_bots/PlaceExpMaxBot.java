@@ -90,7 +90,7 @@ public class PlaceExpMaxBot extends Bot {
             case HEALER_TACTIC -> currentGeneral = UnitType.HEALER;
             case KNIGHT_TACTIC -> currentGeneral = UnitType.KNIGHT;
             case ARCHER_TACTIC -> currentGeneral = UnitType.ARCHER;
-            case BASE_TACTIC -> currentGeneral = UnitType.HEALER;
+            case BASE_TACTIC -> currentGeneral = UnitType.KNIGHT;
         }
         tacticUtility.setBotTactic(botTactic);
     }
@@ -151,7 +151,7 @@ public class PlaceExpMaxBot extends Bot {
 
             for (UtilityPlaceResult task : results) {
                 try {
-                    System.out.println("Значение цены у данного расположения: " + task.value);
+                    //System.out.println("Значение цены у данного расположения: " + task.value);
                     if (bestValue.value < task.value) {
                         bestValue = task;
                     }
@@ -159,7 +159,7 @@ public class PlaceExpMaxBot extends Bot {
                 }
             }
 
-            System.out.println("Наивысшая цена расположения: " + bestValue.value);
+            //System.out.println("Наивысшая цена расположения: " + bestValue.value);
             return bestValue.place;
         }
 
