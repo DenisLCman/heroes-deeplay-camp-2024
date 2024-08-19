@@ -43,9 +43,9 @@ public class Main {
 
   public static void BotFightFun() throws IOException {
     RandomBot bot1 = new RandomBot();
-    AiBot bot2 = new AiBot(PlayerType.SECOND_PLAYER, 6);
+    AiBot bot2 = new AiBot(PlayerType.SECOND_PLAYER, 3);
     for(int i = 0; i<1;i++){
-      BotFight fight = new BotFight(bot1, bot2, 400, true);
+      BotFight fight = new BotFight(bot1, bot2, 1000, true);
     }
   }
 

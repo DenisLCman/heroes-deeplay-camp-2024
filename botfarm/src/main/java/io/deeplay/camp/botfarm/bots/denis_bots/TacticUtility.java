@@ -271,7 +271,7 @@ public class TacticUtility implements UtilityFunction{
             attackTypeMod = -1 * ((float) unitArm / 20 - 1) * placeMod;
         }
         else{
-            attackTypeMod = -1 * ((float) unitArm / 20 - 1) * 1.5 * placeMod;
+            attackTypeMod = -1 * ((float) unitArm / 20 - 1)  * placeMod;
         }
         switch (currentBotTactic){
             case KNIGHT_TACTIC -> buffArm+=GeneralBuff.Buffs.ARMOR.getValue();

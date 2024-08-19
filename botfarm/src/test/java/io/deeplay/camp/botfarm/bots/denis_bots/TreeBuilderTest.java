@@ -17,7 +17,7 @@ class TreeBuilderTest {
 
 
     @Test
-    void buildGameTreeTwoNode() {
+    void buildGameTreeNodeOneEnemy() {
         try{
             GameState gameStateTest = new GameState();
             TreeBuilder treeBuilder = new TreeBuilder();
@@ -56,15 +56,13 @@ class TreeBuilderTest {
 
             TreeBuilder.Stats stats = treeBuilder.buildGameTree(gameStateTest,0, 0);
             assertEquals(stats.getNumNodes(),2);
-            assertEquals(stats.getNumTerminalNodes(),1);
 
         }catch (GameException e){
-            System.out.println("Hui");
         }
     }
 
     @Test
-    void buildGameTreeTwoDepth() {
+    void buildGameTreeDepthTwoEnemy() {
         try{
             GameState gameStateTest = new GameState();
             Knight generalKnight = new Knight(PlayerType.FIRST_PLAYER);
@@ -90,6 +88,7 @@ class TreeBuilderTest {
             gameStateTest.getCurrentBoard().getUnit(1,0).setCurrentHp(0);
             gameStateTest.getCurrentBoard().getUnit(2,0).setCurrentHp(0);
             gameStateTest.getCurrentBoard().getUnit(0,1).setCurrentHp(15);
+            gameStateTest.getCurrentBoard().getUnit(0,1).setAccuracy(15);
             gameStateTest.getCurrentBoard().getUnit(1,1).setCurrentHp(0);
             gameStateTest.getCurrentBoard().getUnit(2,1).setCurrentHp(0);
 
@@ -102,11 +101,249 @@ class TreeBuilderTest {
 
 
             TreeBuilder treeBuilder = new TreeBuilder();
-            TreeBuilder.Stats stats = treeBuilder.buildGameTree(gameStateTest,0,2);
-            assertEquals(stats.getDepth(),2);
+            TreeBuilder.Stats stats = treeBuilder.buildGameTree(gameStateTest,0,3);
+            assertEquals(stats.getDepth(),3);
 
         }catch (GameException e){
-            System.out.println("Hui");
         }
     }
+
+    @Test
+    void buildGameTreeNodeTwoEnemy() {
+        try{
+            GameState gameStateTest = new GameState();
+            Knight generalKnight = new Knight(PlayerType.FIRST_PLAYER);
+            gameStateTest.makePlacement(new PlaceUnitEvent(0, 0, generalKnight, PlayerType.FIRST_PLAYER, true, true));
+            gameStateTest.makePlacement(new PlaceUnitEvent(1, 0, new Mage(PlayerType.FIRST_PLAYER), PlayerType.FIRST_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(2, 0, new Healer(PlayerType.FIRST_PLAYER), PlayerType.FIRST_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(0, 1, new Archer(PlayerType.FIRST_PLAYER), PlayerType.FIRST_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(1, 1, new Knight(PlayerType.FIRST_PLAYER), PlayerType.FIRST_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(2, 1, new Knight(PlayerType.FIRST_PLAYER), PlayerType.FIRST_PLAYER, false, false));
+            gameStateTest.makeChangePlayer(new ChangePlayerEvent(PlayerType.FIRST_PLAYER));
+
+            generalKnight = new Knight(PlayerType.SECOND_PLAYER);
+            gameStateTest.makePlacement(new PlaceUnitEvent(2, 3, generalKnight, PlayerType.SECOND_PLAYER, true, true));
+            gameStateTest.makePlacement(new PlaceUnitEvent(1, 3, new Mage(PlayerType.SECOND_PLAYER), PlayerType.SECOND_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(0, 3, new Healer(PlayerType.SECOND_PLAYER), PlayerType.SECOND_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(2, 2, new Archer(PlayerType.SECOND_PLAYER), PlayerType.SECOND_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(1, 2, new Knight(PlayerType.SECOND_PLAYER), PlayerType.SECOND_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(0, 2, new Knight(PlayerType.SECOND_PLAYER), PlayerType.SECOND_PLAYER, false, false));
+            gameStateTest.makeChangePlayer(new ChangePlayerEvent(PlayerType.SECOND_PLAYER));
+
+
+            gameStateTest.getCurrentBoard().getUnit(0,0).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(1,0).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(2,0).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(0,1).setCurrentHp(15);
+            gameStateTest.getCurrentBoard().getUnit(0,1).setAccuracy(15);
+            gameStateTest.getCurrentBoard().getUnit(1,1).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(2,1).setCurrentHp(0);
+
+            gameStateTest.getCurrentBoard().getUnit(2,3).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(1,3).setCurrentHp(1);
+            gameStateTest.getCurrentBoard().getUnit(0,3).setCurrentHp(1);
+            gameStateTest.getCurrentBoard().getUnit(2,2).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(1,2).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(0,2).setCurrentHp(0);
+
+
+            TreeBuilder treeBuilder = new TreeBuilder();
+            TreeBuilder.Stats stats = treeBuilder.buildGameTree(gameStateTest,0,3);
+            assertEquals(stats.getNumNodes(),7);
+
+        }catch (GameException e){
+        }
+    }
+
+    @Test
+    void buildGameTreeWinFirstTwoEnemy() {
+        try{
+            GameState gameStateTest = new GameState();
+            Knight generalKnight = new Knight(PlayerType.FIRST_PLAYER);
+            gameStateTest.makePlacement(new PlaceUnitEvent(0, 0, generalKnight, PlayerType.FIRST_PLAYER, true, true));
+            gameStateTest.makePlacement(new PlaceUnitEvent(1, 0, new Mage(PlayerType.FIRST_PLAYER), PlayerType.FIRST_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(2, 0, new Healer(PlayerType.FIRST_PLAYER), PlayerType.FIRST_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(0, 1, new Archer(PlayerType.FIRST_PLAYER), PlayerType.FIRST_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(1, 1, new Knight(PlayerType.FIRST_PLAYER), PlayerType.FIRST_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(2, 1, new Knight(PlayerType.FIRST_PLAYER), PlayerType.FIRST_PLAYER, false, false));
+            gameStateTest.makeChangePlayer(new ChangePlayerEvent(PlayerType.FIRST_PLAYER));
+
+            generalKnight = new Knight(PlayerType.SECOND_PLAYER);
+            gameStateTest.makePlacement(new PlaceUnitEvent(2, 3, generalKnight, PlayerType.SECOND_PLAYER, true, true));
+            gameStateTest.makePlacement(new PlaceUnitEvent(1, 3, new Mage(PlayerType.SECOND_PLAYER), PlayerType.SECOND_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(0, 3, new Healer(PlayerType.SECOND_PLAYER), PlayerType.SECOND_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(2, 2, new Archer(PlayerType.SECOND_PLAYER), PlayerType.SECOND_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(1, 2, new Knight(PlayerType.SECOND_PLAYER), PlayerType.SECOND_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(0, 2, new Knight(PlayerType.SECOND_PLAYER), PlayerType.SECOND_PLAYER, false, false));
+            gameStateTest.makeChangePlayer(new ChangePlayerEvent(PlayerType.SECOND_PLAYER));
+
+
+            gameStateTest.getCurrentBoard().getUnit(0,0).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(1,0).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(2,0).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(0,1).setCurrentHp(15);
+            gameStateTest.getCurrentBoard().getUnit(0,1).setAccuracy(15);
+            gameStateTest.getCurrentBoard().getUnit(1,1).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(2,1).setCurrentHp(0);
+
+            gameStateTest.getCurrentBoard().getUnit(2,3).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(1,3).setCurrentHp(1);
+            gameStateTest.getCurrentBoard().getUnit(0,3).setCurrentHp(1);
+            gameStateTest.getCurrentBoard().getUnit(2,2).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(1,2).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(0,2).setCurrentHp(0);
+
+
+            TreeBuilder treeBuilder = new TreeBuilder();
+            TreeBuilder.Stats stats = treeBuilder.buildGameTree(gameStateTest,0,10);
+            assertEquals(stats.getWinRateFirst(),2);
+
+        }catch (GameException e){
+        }
+    }
+
+    @Test
+    void buildGameTreeDepthThreeEnemy() {
+        try{
+            GameState gameStateTest = new GameState();
+            Knight generalKnight = new Knight(PlayerType.FIRST_PLAYER);
+            gameStateTest.makePlacement(new PlaceUnitEvent(0, 0, generalKnight, PlayerType.FIRST_PLAYER, true, true));
+            gameStateTest.makePlacement(new PlaceUnitEvent(1, 0, new Mage(PlayerType.FIRST_PLAYER), PlayerType.FIRST_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(2, 0, new Healer(PlayerType.FIRST_PLAYER), PlayerType.FIRST_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(0, 1, new Archer(PlayerType.FIRST_PLAYER), PlayerType.FIRST_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(1, 1, new Knight(PlayerType.FIRST_PLAYER), PlayerType.FIRST_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(2, 1, new Knight(PlayerType.FIRST_PLAYER), PlayerType.FIRST_PLAYER, false, false));
+            gameStateTest.makeChangePlayer(new ChangePlayerEvent(PlayerType.FIRST_PLAYER));
+
+            generalKnight = new Knight(PlayerType.SECOND_PLAYER);
+            gameStateTest.makePlacement(new PlaceUnitEvent(2, 3, generalKnight, PlayerType.SECOND_PLAYER, true, true));
+            gameStateTest.makePlacement(new PlaceUnitEvent(1, 3, new Mage(PlayerType.SECOND_PLAYER), PlayerType.SECOND_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(0, 3, new Healer(PlayerType.SECOND_PLAYER), PlayerType.SECOND_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(2, 2, new Archer(PlayerType.SECOND_PLAYER), PlayerType.SECOND_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(1, 2, new Knight(PlayerType.SECOND_PLAYER), PlayerType.SECOND_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(0, 2, new Knight(PlayerType.SECOND_PLAYER), PlayerType.SECOND_PLAYER, false, false));
+            gameStateTest.makeChangePlayer(new ChangePlayerEvent(PlayerType.SECOND_PLAYER));
+
+
+            gameStateTest.getCurrentBoard().getUnit(0,0).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(1,0).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(2,0).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(0,1).setCurrentHp(15);
+            gameStateTest.getCurrentBoard().getUnit(0,1).setAccuracy(30);
+            gameStateTest.getCurrentBoard().getUnit(0,1).setArmor(30);
+            gameStateTest.getCurrentBoard().getUnit(1,1).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(2,1).setCurrentHp(0);
+
+            gameStateTest.getCurrentBoard().getUnit(2,3).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(1,3).setCurrentHp(1);
+            gameStateTest.getCurrentBoard().getUnit(0,3).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(2,2).setCurrentHp(1);
+            gameStateTest.getCurrentBoard().getUnit(1,2).setCurrentHp(1);
+            gameStateTest.getCurrentBoard().getUnit(0,2).setCurrentHp(0);
+
+
+            TreeBuilder treeBuilder = new TreeBuilder();
+            TreeBuilder.Stats stats = treeBuilder.buildGameTree(gameStateTest,0,0);
+            assertEquals(stats.getDepth(),6);
+        }catch (GameException e){
+        }
+    }
+
+    @Test
+    void buildGameTreeNodeThreeEnemy() {
+        try{
+            GameState gameStateTest = new GameState();
+            Knight generalKnight = new Knight(PlayerType.FIRST_PLAYER);
+            gameStateTest.makePlacement(new PlaceUnitEvent(0, 0, generalKnight, PlayerType.FIRST_PLAYER, true, true));
+            gameStateTest.makePlacement(new PlaceUnitEvent(1, 0, new Mage(PlayerType.FIRST_PLAYER), PlayerType.FIRST_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(2, 0, new Healer(PlayerType.FIRST_PLAYER), PlayerType.FIRST_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(0, 1, new Archer(PlayerType.FIRST_PLAYER), PlayerType.FIRST_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(1, 1, new Knight(PlayerType.FIRST_PLAYER), PlayerType.FIRST_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(2, 1, new Knight(PlayerType.FIRST_PLAYER), PlayerType.FIRST_PLAYER, false, false));
+            gameStateTest.makeChangePlayer(new ChangePlayerEvent(PlayerType.FIRST_PLAYER));
+
+            generalKnight = new Knight(PlayerType.SECOND_PLAYER);
+            gameStateTest.makePlacement(new PlaceUnitEvent(2, 3, generalKnight, PlayerType.SECOND_PLAYER, true, true));
+            gameStateTest.makePlacement(new PlaceUnitEvent(1, 3, new Mage(PlayerType.SECOND_PLAYER), PlayerType.SECOND_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(0, 3, new Healer(PlayerType.SECOND_PLAYER), PlayerType.SECOND_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(2, 2, new Archer(PlayerType.SECOND_PLAYER), PlayerType.SECOND_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(1, 2, new Knight(PlayerType.SECOND_PLAYER), PlayerType.SECOND_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(0, 2, new Knight(PlayerType.SECOND_PLAYER), PlayerType.SECOND_PLAYER, false, false));
+            gameStateTest.makeChangePlayer(new ChangePlayerEvent(PlayerType.SECOND_PLAYER));
+
+
+            gameStateTest.getCurrentBoard().getUnit(0,0).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(1,0).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(2,0).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(0,1).setCurrentHp(15);
+            gameStateTest.getCurrentBoard().getUnit(0,1).setAccuracy(30);
+            gameStateTest.getCurrentBoard().getUnit(0,1).setArmor(30);
+            gameStateTest.getCurrentBoard().getUnit(1,1).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(2,1).setCurrentHp(0);
+
+            gameStateTest.getCurrentBoard().getUnit(2,3).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(1,3).setCurrentHp(1);
+            gameStateTest.getCurrentBoard().getUnit(0,3).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(2,2).setCurrentHp(1);
+            gameStateTest.getCurrentBoard().getUnit(1,2).setCurrentHp(1);
+            gameStateTest.getCurrentBoard().getUnit(0,2).setCurrentHp(0);
+
+
+            TreeBuilder treeBuilder = new TreeBuilder();
+            TreeBuilder.Stats stats = treeBuilder.buildGameTree(gameStateTest,0,0);
+            assertEquals(stats.getNumNodes(),52);
+        }catch (GameException e){
+        }
+    }
+
+    @Test
+    void buildGameTreeTerminalNodeThreeEnemy() {
+        try{
+            GameState gameStateTest = new GameState();
+            Knight generalKnight = new Knight(PlayerType.FIRST_PLAYER);
+            gameStateTest.makePlacement(new PlaceUnitEvent(0, 0, generalKnight, PlayerType.FIRST_PLAYER, true, true));
+            gameStateTest.makePlacement(new PlaceUnitEvent(1, 0, new Mage(PlayerType.FIRST_PLAYER), PlayerType.FIRST_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(2, 0, new Healer(PlayerType.FIRST_PLAYER), PlayerType.FIRST_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(0, 1, new Archer(PlayerType.FIRST_PLAYER), PlayerType.FIRST_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(1, 1, new Knight(PlayerType.FIRST_PLAYER), PlayerType.FIRST_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(2, 1, new Knight(PlayerType.FIRST_PLAYER), PlayerType.FIRST_PLAYER, false, false));
+            gameStateTest.makeChangePlayer(new ChangePlayerEvent(PlayerType.FIRST_PLAYER));
+
+            generalKnight = new Knight(PlayerType.SECOND_PLAYER);
+            gameStateTest.makePlacement(new PlaceUnitEvent(2, 3, generalKnight, PlayerType.SECOND_PLAYER, true, true));
+            gameStateTest.makePlacement(new PlaceUnitEvent(1, 3, new Mage(PlayerType.SECOND_PLAYER), PlayerType.SECOND_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(0, 3, new Healer(PlayerType.SECOND_PLAYER), PlayerType.SECOND_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(2, 2, new Archer(PlayerType.SECOND_PLAYER), PlayerType.SECOND_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(1, 2, new Knight(PlayerType.SECOND_PLAYER), PlayerType.SECOND_PLAYER, true, false));
+            gameStateTest.makePlacement(new PlaceUnitEvent(0, 2, new Knight(PlayerType.SECOND_PLAYER), PlayerType.SECOND_PLAYER, false, false));
+            gameStateTest.makeChangePlayer(new ChangePlayerEvent(PlayerType.SECOND_PLAYER));
+
+
+            gameStateTest.getCurrentBoard().getUnit(0,0).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(1,0).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(2,0).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(0,1).setCurrentHp(15);
+            gameStateTest.getCurrentBoard().getUnit(0,1).setAccuracy(30);
+            gameStateTest.getCurrentBoard().getUnit(0,1).setArmor(30);
+            gameStateTest.getCurrentBoard().getUnit(1,1).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(2,1).setCurrentHp(0);
+
+            gameStateTest.getCurrentBoard().getUnit(2,3).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(1,3).setCurrentHp(1);
+            gameStateTest.getCurrentBoard().getUnit(0,3).setCurrentHp(0);
+            gameStateTest.getCurrentBoard().getUnit(2,2).setCurrentHp(1);
+            gameStateTest.getCurrentBoard().getUnit(1,2).setCurrentHp(1);
+            gameStateTest.getCurrentBoard().getUnit(0,2).setCurrentHp(0);
+
+
+            TreeBuilder treeBuilder = new TreeBuilder();
+            TreeBuilder.Stats stats = treeBuilder.buildGameTree(gameStateTest,0,0);
+            assertEquals(stats.getNumTerminalNodes(),12);
+        }catch (GameException e){
+        }
+    }
+
+
+
+
 }

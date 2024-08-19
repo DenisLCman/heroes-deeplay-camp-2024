@@ -13,8 +13,7 @@ import java.util.List;
 
 public class TreeBuilder {
 
-    static boolean firstRootStart = true;
-    static boolean firstRootEnd = true;
+    boolean firstRootStart = true;
 
     @Getter
     public class Stats{
@@ -22,7 +21,6 @@ public class TreeBuilder {
         int numTerminalNodes;
         int maxDepth;
         int depth;
-        double coefBranch;
         long workTimeMS;
         int winRateFirst;
         int winRateSecond;
@@ -32,7 +30,6 @@ public class TreeBuilder {
             numTerminalNodes = 0;
             maxDepth = 0;
             depth = 0;
-            coefBranch = 0;
             workTimeMS = 0;
             winRateFirst = 0;
             winRateSecond = 0;
@@ -44,19 +41,23 @@ public class TreeBuilder {
     @SneakyThrows
     public Stats buildGameTree(final GameState root, int depth, int maxDepth){
         if(firstRootStart){
+            stats.numNodes++;
             stats.maxDepth = maxDepth;
+            stats.depth = depth;
             stats.workTimeMS = System.currentTimeMillis();
             firstRootStart = false;
         }
         List<MakeMoveEvent> movesRoot = root.getPossibleMoves();
-        stats.numNodes++;
+        if(depth > stats.depth) {
+            stats.depth = depth;
+        }
         if(maxDepth != 0 && depth == stats.maxDepth){
             stats.numTerminalNodes++;
         } else if (movesRoot.isEmpty()) {
             if (root.getGameStage() != GameStage.ENDED) {
                 GameState nodeGameState = root.getCopy();
                 nodeGameState.changeCurrentPlayer();
-                buildGameTree(nodeGameState, depth+1, maxDepth);
+                buildGameTree(nodeGameState, depth, maxDepth);
             } else {
                 stats.numTerminalNodes++;
                 switch (root.getWinner()) {
@@ -64,16 +65,15 @@ public class TreeBuilder {
                     case SECOND_PLAYER -> stats.winRateSecond++;
                     case DRAW -> stats.winRateDraw++;
                 }
+                return stats;
             }
         } else {
             for (MakeMoveEvent moveEvent : movesRoot) {
+                stats.numNodes++;
                 GameState nodeGameState = root.getCopy();
                 nodeGameState.makeMove(moveEvent);
                 buildGameTree(nodeGameState, depth+1, maxDepth);
             }
-        }
-        if(depth > stats.depth){
-            stats.depth = depth;
         }
         return stats;
     }
