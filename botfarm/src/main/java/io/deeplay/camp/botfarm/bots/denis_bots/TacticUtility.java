@@ -43,8 +43,48 @@ public class TacticUtility implements UtilityFunction{
             case HEALER_TACTIC -> {
                 return healerTacticUtility(gameState);
             }
+            case BASE_TACTIC -> {
+                return baseTacticUtility(gameState);
+            }
         }
         return 0;
+    }
+
+    private double baseTacticUtility(GameState gameState) {
+        int FirstHp = 0;
+        int SecondHp = 0;
+        int liveSecond = 0;
+        int liveFirst = 0;
+        int AllHp;
+        for(int column = 0;column < Board.COLUMNS;column++){
+            for(int row = 0; row < Board.ROWS;row++){
+                if(gameState.getBoard().getUnit(column,row).getPlayerType() == PlayerType.FIRST_PLAYER &&
+                        gameState.getBoard().getUnit(column,row).isAlive()){
+                    FirstHp+=gameState.getBoard().getUnit(column,row).getCurrentHp();
+                    liveFirst++;
+                }
+                else if(gameState.getBoard().getUnit(column,row).getPlayerType() == PlayerType.SECOND_PLAYER &&
+                        gameState.getBoard().getUnit(column,row).isAlive()){
+                    SecondHp+=gameState.getBoard().getUnit(column,row).getCurrentHp();
+                    liveSecond++;
+                }
+            }
+        }
+        AllHp = FirstHp + SecondHp;
+        double AllLives = liveFirst + liveSecond;
+        double perFirst =  ((double)FirstHp/AllHp)*100;
+        double perSecond = ((double)SecondHp/AllHp)*100;
+        double result = perSecond/perFirst;
+
+        double perLiveFirst = ((double)liveFirst/AllLives)*100;
+        double perLiveSecond = ((double)liveSecond/AllLives)*100;
+
+        if(currentPlayerType == PlayerType.SECOND_PLAYER){
+            return (((liveSecond*perSecond)/((liveFirst*6)+1)));
+        }
+        else{
+            return (((liveFirst*perFirst)/((liveSecond*6)+1)));
+        }
     }
 
     @Override
@@ -163,9 +203,6 @@ public class TacticUtility implements UtilityFunction{
         }
 
     }
-
-
-
     private double archerTacticUtility(GameState gameState){
         int FirstHp = 0;
         int SecondHp = 0;
@@ -238,7 +275,6 @@ public class TacticUtility implements UtilityFunction{
             return (((liveFirst*perFirst)/((liveSecond*6)+1)));
         }
     }
-
 
 
     public double calculateProfit(UnitType takeUnit, AttackType attackType){

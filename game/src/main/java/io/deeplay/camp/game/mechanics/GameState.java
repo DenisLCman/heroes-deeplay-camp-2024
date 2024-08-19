@@ -621,7 +621,6 @@ public class GameState {
         return possibleIssue;
     }
 
-
     private void addValidMoves(
             List<MakeMoveEvent> possibleMoves, List<Position> targetPositions, Position from, Unit unit) {
         for (Position to : targetPositions) {

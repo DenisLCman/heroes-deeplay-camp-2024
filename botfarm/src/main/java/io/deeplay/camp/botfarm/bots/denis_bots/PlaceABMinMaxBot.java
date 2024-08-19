@@ -2,14 +2,15 @@ package io.deeplay.camp.botfarm.bots.denis_bots;
 
 import io.deeplay.camp.botfarm.bots.Bot;
 import io.deeplay.camp.botfarm.bots.RandomBot;
-import io.deeplay.camp.game.entities.*;
+import io.deeplay.camp.game.entities.Board;
+import io.deeplay.camp.game.entities.Position;
+import io.deeplay.camp.game.entities.UnitType;
 import io.deeplay.camp.game.events.MakeMoveEvent;
 import io.deeplay.camp.game.events.PlaceUnitEvent;
 import io.deeplay.camp.game.exceptions.GameException;
 import io.deeplay.camp.game.mechanics.GameStage;
 import io.deeplay.camp.game.mechanics.GameState;
 import io.deeplay.camp.game.mechanics.PlayerType;
-import io.deeplay.camp.game.mechanics.PossibleActions;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,18 +24,35 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 
-public class AiBot extends Bot {
+public class PlaceABMinMaxBot extends Bot {
     private static final Logger logger = LoggerFactory.getLogger(RandomBot.class);
     BotTactic botTactic;
-    UtilityFunction tacticUtility;
     UnitType currentGeneral;
+    UtilityFunction tacticUtility;
     int maxDepth;
-    @Setter boolean firstPlaceInGame = true;
+    @Setter
+    boolean firstPlaceInGame = true;
 
-    public AiBot(PlayerType playerType, int maxDepth){
-        tacticUtility = new TacticUtility(BotTactic.KNIGHT_TACTIC);
+    public PlaceABMinMaxBot(PlayerType playerType, int maxDepth){
+        tacticUtility = new TacticUtility(BotTactic.BASE_TACTIC);
         tacticUtility.setCurrentPlayerType(playerType);
         this.maxDepth = maxDepth;
+    }
+
+    @Getter
+    @AllArgsConstructor
+    static class UtilityMoveResult {
+        double value;
+        MakeMoveEvent event;
+
+    }
+
+    @Getter
+    @AllArgsConstructor
+    static class UtilityPlaceResult {
+        double value;
+        PlaceUnitEvent place;
+
     }
 
     public void findNewTactic(GameState gameState){
@@ -63,7 +81,7 @@ public class AiBot extends Bot {
         }
         else if (gameState.getCurrentPlayer() == PlayerType.SECOND_PLAYER){
             UnitType generalOpponent = null;
-            for(int column = 0; column < Board.COLUMNS;column++){
+            for(int column = 0; column < Board.COLUMNS; column++){
                 for(int row = 0; row < Board.ROWS/2;row++){
                     if(gameState.getCurrentBoard().getUnit(column, row).isGeneral()){
                         generalOpponent = gameState.getCurrentBoard().getUnit(column, row).getUnitType();
@@ -95,22 +113,6 @@ public class AiBot extends Bot {
         tacticUtility.setBotTactic(botTactic);
     }
 
-    @Getter
-    @AllArgsConstructor
-    static class UtilityMoveResult {
-        double value;
-        MakeMoveEvent event;
-
-    }
-
-    @Getter
-    @AllArgsConstructor
-    static class UtilityPlaceResult {
-        double value;
-        PlaceUnitEvent place;
-
-    }
-
     @Override
     public PlaceUnitEvent generatePlaceUnitEvent(GameState gameState) {
         if(firstPlaceInGame) {
@@ -120,7 +122,7 @@ public class AiBot extends Bot {
         }
         int originDepth;
         if(gameState.getCurrentPlayer() == PlayerType.FIRST_PLAYER){
-           originDepth = enumerationPlayerUnits(PlayerType.FIRST_PLAYER,gameState.getCurrentBoard()).size();
+            originDepth = enumerationPlayerUnits(PlayerType.FIRST_PLAYER,gameState.getCurrentBoard()).size();
         }
         else{
             originDepth = enumerationPlayerUnits(PlayerType.SECOND_PLAYER,gameState.getCurrentBoard()).size();
@@ -128,28 +130,28 @@ public class AiBot extends Bot {
 
         List<PlaceUnitEvent> possiblePlaces =  gameState.getPossiblePlaces();
         if (possiblePlaces.isEmpty()) {
-            return new UtilityPlaceResult(Double.NEGATIVE_INFINITY, null).place;
+            return new AiBot.UtilityPlaceResult(Double.NEGATIVE_INFINITY, null).place;
         } else{
-            UtilityPlaceResult bestValue = new UtilityPlaceResult(Double.NEGATIVE_INFINITY,null);
-            List<RecursiveTask<UtilityPlaceResult>> tasks = new ArrayList<>();
+            AiBot.UtilityPlaceResult bestValue = new AiBot.UtilityPlaceResult(Double.NEGATIVE_INFINITY,null);
+            List<RecursiveTask<AiBot.UtilityPlaceResult>> tasks = new ArrayList<>();
             for (PlaceUnitEvent placeRoot : possiblePlaces) {
-                RecursiveTask<UtilityPlaceResult> task = new RecursiveTask<UtilityPlaceResult>() {
+                RecursiveTask<AiBot.UtilityPlaceResult> task = new RecursiveTask<AiBot.UtilityPlaceResult>() {
                     @SneakyThrows
                     @Override
-                    protected UtilityPlaceResult compute() {
+                    protected AiBot.UtilityPlaceResult compute() {
                         GameState gameStateNode = gameState.getCopy();
                         gameStateNode.makePlacement(placeRoot);
                         double result = maximumPlaceAlg(gameStateNode, originDepth);
-                        return new UtilityPlaceResult(result, placeRoot);
+                        return new AiBot.UtilityPlaceResult(result, placeRoot);
                     }
                 };
                 tasks.add(task);
             }
-            List<UtilityPlaceResult> results = ForkJoinTask.invokeAll(tasks).stream()
+            List<AiBot.UtilityPlaceResult> results = ForkJoinTask.invokeAll(tasks).stream()
                     .map(ForkJoinTask::join)
                     .toList();
 
-            for (UtilityPlaceResult task : results) {
+            for (AiBot.UtilityPlaceResult task : results) {
                 try {
                     System.out.println("Значение цены у данного расположения: " + task.value);
                     if (bestValue.value < task.value) {
@@ -164,6 +166,7 @@ public class AiBot extends Bot {
         }
 
     }
+
 
     public double maximumPlaceAlg(GameState root, int depth) throws GameException {
         if(depth == 0 || root.getGameStage() == GameStage.ENDED){
@@ -217,6 +220,7 @@ public class AiBot extends Bot {
 
     }
 
+
     @Override
     public MakeMoveEvent generateMakeMoveEvent(GameState gameState) {
         firstPlaceInGame = true;
@@ -237,8 +241,7 @@ public class AiBot extends Bot {
                     @SneakyThrows
                     @Override
                     protected UtilityMoveResult compute() {
-                        double result = expectMaxAlg(gameState, moveEvent,originDepth,
-                                Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, true);
+                        double result = MinMaxAlg(gameState, originDepth, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, true);
                         return new UtilityMoveResult(result, moveEvent);
                     }
                 };
@@ -253,7 +256,7 @@ public class AiBot extends Bot {
         }
     }
 
-    public double alphaBetaMinMaxAlg(GameState root, int depth, double alpha, double beta, boolean maxPlayer) throws GameException {
+    public double MinMaxAlg(GameState root, int depth, double alpha, double beta, boolean maxPlayer) throws GameException {
         if(depth == 0 || root.getGameStage() == GameStage.ENDED){
             return tacticUtility.getMoveUtility(root);
         }
@@ -266,37 +269,27 @@ public class AiBot extends Bot {
             else {
                 GameState gameStateNode = root.getCopy();
                 gameStateNode.changeCurrentPlayer();
-                return alphaBetaMinMaxAlg(gameStateNode, depth, alpha,beta,!maxPlayer);
+                return MinMaxAlg(gameStateNode, depth,alpha, beta ,!maxPlayer);
             }
         } else {
             for (MakeMoveEvent moveEvent : movesRoot) {
-                double v = expectMaxAlg(root, moveEvent, depth, alpha,beta,maxPlayer);
+                GameState gameStateNode = root.getCopy();
+                gameStateNode.makeMove(moveEvent);
+                double v = MinMaxAlg(gameStateNode, depth-1,alpha,beta,maxPlayer);
                 bestValue = maxPlayer ? Math.max(bestValue,v) : Math.min(bestValue,v);
+                if(maxPlayer){
+                    alpha = Math.max(alpha,bestValue);
+                }
+                else{
+                    beta = Math.min(beta, bestValue);
+                }
+                if(beta <= alpha){
+                    break;
+                }
+
             }
             return bestValue;
         }
-    }
-
-    private double expectMaxAlg(GameState root, MakeMoveEvent event, int depth, double alpha, double beta, boolean maxPlayer) throws GameException {
-        List<StateChanceResult> chancesRoot = root.getPossibleIssue(event);
-            double excepted = 0;
-            for (StateChanceResult chance : chancesRoot) {
-                GameState nodeGameState = chance.gameState().getCopy();
-                double v = alphaBetaMinMaxAlg(nodeGameState, depth-1, alpha,beta,maxPlayer);
-                excepted += chance.chance() * v;
-            }
-            return excepted;
-    }
-
-
-    public List<Position> enumerationPlayerUnits(PlayerType playerType, Board board) {
-        List<Position> unitPositions = new ArrayList<>();
-        if (playerType == PlayerType.FIRST_PLAYER) {
-            unitPositions.addAll(board.enumerateUnits(0, Board.ROWS / 2));
-        } else {
-            unitPositions.addAll(board.enumerateUnits(Board.ROWS / 2, Board.ROWS));
-        }
-        return unitPositions;
     }
 
     private UtilityMoveResult getMaxFromTasks(List<UtilityMoveResult> results){
@@ -318,7 +311,18 @@ public class AiBot extends Bot {
                 bestValue = task;
             }
         }
+
         return bestValue;
+    }
+
+    public List<Position> enumerationPlayerUnits(PlayerType playerType, Board board) {
+        List<Position> unitPositions = new ArrayList<>();
+        if (playerType == PlayerType.FIRST_PLAYER) {
+            unitPositions.addAll(board.enumerateUnits(0, Board.ROWS / 2));
+        } else {
+            unitPositions.addAll(board.enumerateUnits(Board.ROWS / 2, Board.ROWS));
+        }
+        return unitPositions;
     }
 
 }

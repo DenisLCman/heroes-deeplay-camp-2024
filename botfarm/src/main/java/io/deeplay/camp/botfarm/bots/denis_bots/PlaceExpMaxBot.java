@@ -23,7 +23,7 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 
-public class AiBot extends Bot {
+public class PlaceExpMaxBot extends Bot {
     private static final Logger logger = LoggerFactory.getLogger(RandomBot.class);
     BotTactic botTactic;
     UtilityFunction tacticUtility;
@@ -31,7 +31,7 @@ public class AiBot extends Bot {
     int maxDepth;
     @Setter boolean firstPlaceInGame = true;
 
-    public AiBot(PlayerType playerType, int maxDepth){
+    public PlaceExpMaxBot(PlayerType playerType, int maxDepth){
         tacticUtility = new TacticUtility(BotTactic.KNIGHT_TACTIC);
         tacticUtility.setCurrentPlayerType(playerType);
         this.maxDepth = maxDepth;
@@ -90,7 +90,7 @@ public class AiBot extends Bot {
             case HEALER_TACTIC -> currentGeneral = UnitType.HEALER;
             case KNIGHT_TACTIC -> currentGeneral = UnitType.KNIGHT;
             case ARCHER_TACTIC -> currentGeneral = UnitType.ARCHER;
-            case null, default -> currentGeneral = UnitType.HEALER;
+            case BASE_TACTIC -> currentGeneral = UnitType.HEALER;
         }
         tacticUtility.setBotTactic(botTactic);
     }
@@ -120,7 +120,7 @@ public class AiBot extends Bot {
         }
         int originDepth;
         if(gameState.getCurrentPlayer() == PlayerType.FIRST_PLAYER){
-           originDepth = enumerationPlayerUnits(PlayerType.FIRST_PLAYER,gameState.getCurrentBoard()).size();
+            originDepth = enumerationPlayerUnits(PlayerType.FIRST_PLAYER,gameState.getCurrentBoard()).size();
         }
         else{
             originDepth = enumerationPlayerUnits(PlayerType.SECOND_PLAYER,gameState.getCurrentBoard()).size();
@@ -191,7 +191,7 @@ public class AiBot extends Bot {
         if(placeRoot.isEmpty()){
             if(tacticUtility.getCurrentPlayerType() == PlayerType.FIRST_PLAYER){
                 if(root.getArmyFirst().getGeneralType() == currentGeneral){
-                    return 10000*tacticUtility.getPlaceUtility(root);
+                    return 5*tacticUtility.getPlaceUtility(root);
                 }
                 else{
                     return tacticUtility.getPlaceUtility(root);
@@ -199,7 +199,7 @@ public class AiBot extends Bot {
             }
             else{
                 if(root.getArmySecond().getGeneralType() == currentGeneral){
-                    return 10000*tacticUtility.getPlaceUtility(root);
+                    return 5*tacticUtility.getPlaceUtility(root);
                 }
                 else{
                     return tacticUtility.getPlaceUtility(root);
@@ -279,13 +279,13 @@ public class AiBot extends Bot {
 
     private double expectMaxAlg(GameState root, MakeMoveEvent event, int depth, double alpha, double beta, boolean maxPlayer) throws GameException {
         List<StateChanceResult> chancesRoot = root.getPossibleIssue(event);
-            double excepted = 0;
-            for (StateChanceResult chance : chancesRoot) {
-                GameState nodeGameState = chance.gameState().getCopy();
-                double v = alphaBetaMinMaxAlg(nodeGameState, depth-1, alpha,beta,maxPlayer);
-                excepted += chance.chance() * v;
-            }
-            return excepted;
+        double excepted = 0;
+        for (StateChanceResult chance : chancesRoot) {
+            GameState nodeGameState = chance.gameState().getCopy();
+            double v = alphaBetaMinMaxAlg(nodeGameState, depth-1, alpha,beta,maxPlayer);
+            excepted += chance.chance() * v;
+        }
+        return excepted;
     }
 
 

@@ -123,31 +123,31 @@ public class BotFight extends Thread{
             if (gameState.getCurrentPlayer() == PlayerType.FIRST_PLAYER) {
                 long startTimer = System.currentTimeMillis();
                 MakeMoveEvent event = botFirst.generateMakeMoveEvent(gameState);
-
+                if (event == null) {
+                    continue;
+                }
                 long endTimer = System.currentTimeMillis();
-                //gameAnalisys.reviewTimeMove(endTimer - startTimer, countGame);
                 if(endTimer - startTimer > 500000){
                     GiveUpEvent giveUpEvent = new GiveUpEvent(PlayerType.FIRST_PLAYER);
                     gameState.giveUp(giveUpEvent);
                 }
-                if (event == null) {
-                    continue;
-                }
+
                 game.makeMove(event);
                 Thread.sleep(timeSkeep);
                 outInFrame(event);
             } else {
                 long startTimer = System.currentTimeMillis();
                 MakeMoveEvent event = botSecond.generateMakeMoveEvent(gameState);
+                if (event == null) {
+                    continue;
+                }
                 long endTimer = System.currentTimeMillis();
                 gameAnalisys.reviewTimeMove(endTimer - startTimer, countGame);
                 if(endTimer - startTimer > 500000){
                     GiveUpEvent giveUpEvent = new GiveUpEvent(PlayerType.SECOND_PLAYER);
                     gameState.giveUp(giveUpEvent);
                 }
-                if (event == null) {
-                    continue;
-                }
+
                 game.makeMove(event);
                 Thread.sleep(timeSkeep);
                 outInFrame(event);
