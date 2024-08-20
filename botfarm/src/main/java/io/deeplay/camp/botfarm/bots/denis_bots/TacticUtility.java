@@ -32,6 +32,7 @@ public class TacticUtility implements UtilityFunction{
     @Override
     public double getMoveUtility(GameState gameState) {
         switch (currentBotTactic){
+            /*
             case MAGE_TACTIC -> {
                 return mageTacticUtility(gameState);
             }
@@ -44,48 +45,61 @@ public class TacticUtility implements UtilityFunction{
             case HEALER_TACTIC -> {
                 return healerTacticUtility(gameState);
             }
+
+             */
             case BASE_TACTIC -> {
                 return baseTacticUtility(gameState);
             }
+            default -> {
+                return baseTacticUtility(gameState);
+            }
         }
-        return 0;
     }
 
     private double baseTacticUtility(GameState gameState) {
-        int FirstHp = 0;
-        int SecondHp = 0;
+        int firstHp = 0;
+        int secondHp = 0;
         int liveSecond = 0;
         int liveFirst = 0;
-        int AllHp;
-        for(int column = 0;column < Board.COLUMNS;column++){
-            for(int row = 0; row < Board.ROWS;row++){
-                if(gameState.getBoard().getUnit(column,row).getPlayerType() == PlayerType.FIRST_PLAYER &&
-                        gameState.getBoard().getUnit(column,row).isAlive()){
-                    FirstHp+=gameState.getBoard().getUnit(column,row).getCurrentHp();
-                    liveFirst++;
-                }
-                else if(gameState.getBoard().getUnit(column,row).getPlayerType() == PlayerType.SECOND_PLAYER &&
-                        gameState.getBoard().getUnit(column,row).isAlive()){
-                    SecondHp+=gameState.getBoard().getUnit(column,row).getCurrentHp();
-                    liveSecond++;
+        int liveGeneralFirst = 0;
+        int liveGeneralSecond = 0;
+
+        for (int column = 0; column < Board.COLUMNS; column++) {
+            for (int row = 0; row < Board.ROWS; row++) {
+                Unit unit = gameState.getBoard().getUnit(column, row);
+                if (unit.isAlive()) {
+                    if (unit.getPlayerType() == PlayerType.FIRST_PLAYER) {
+                        firstHp += unit.getCurrentHp();
+                        liveFirst++;
+                        if (unit.isGeneral()) {
+                            liveGeneralFirst++;
+                        }
+                    } else if (unit.getPlayerType() == PlayerType.SECOND_PLAYER) {
+                        secondHp += unit.getCurrentHp();
+                        liveSecond++;
+                        if (unit.isGeneral()) {
+                            liveGeneralSecond++;
+                        }
+                    }
                 }
             }
         }
-        AllHp = FirstHp + SecondHp;
-        double AllLives = liveFirst + liveSecond;
-        double perFirst =  ((double)FirstHp/AllHp)*100;
-        double perSecond = ((double)SecondHp/AllHp)*100;
-        double result = perSecond/perFirst;
+        int allHp = firstHp + secondHp;
 
-        double perLiveFirst = ((double)liveFirst/AllLives)*100;
-        double perLiveSecond = ((double)liveSecond/AllLives)*100;
+        double perFirst = ((double) firstHp / allHp) * 100;
+        double perSecond = ((double) secondHp / allHp) * 100;
 
-        if(currentPlayerType == PlayerType.SECOND_PLAYER){
-            return (((liveSecond*perSecond)/((liveFirst*6)+1)));
+        double valueFirst = (liveFirst * perFirst + liveGeneralFirst * 10) / ((liveSecond * 6 + liveGeneralSecond * 12) + 1);
+        double valueSecond = (liveSecond * perSecond + liveGeneralSecond * 10) / ((liveFirst * 6 + liveGeneralFirst * 12) + 1);
+
+        double result;
+        if (currentPlayerType == PlayerType.FIRST_PLAYER) {
+            result = (valueFirst - valueSecond) / (valueFirst + valueSecond);
+        } else {
+            result = (valueSecond - valueFirst) / (valueFirst + valueSecond);
         }
-        else{
-            return (((liveFirst*perFirst)/((liveSecond*6)+1)));
-        }
+
+        return result;
     }
 
     @Override
@@ -132,211 +146,185 @@ public class TacticUtility implements UtilityFunction{
     }
 
     private double mageTacticUtility(GameState gameState){
-        int FirstHp = 0;
-        int SecondHp = 0;
+        int firstHp = 0;
+        int secondHp = 0;
         int liveSecond = 0;
         int liveFirst = 0;
-        int AllHp;
         int liveGeneralFirst = 0;
         int liveGeneralSecond = 0;
-        for(int column = 0;column < Board.COLUMNS;column++){
-            for(int row = 0; row < Board.ROWS;row++){
-                if(gameState.getBoard().getUnit(column,row).getPlayerType() == PlayerType.FIRST_PLAYER &&
-                        gameState.getBoard().getUnit(column,row).isAlive()){
-                    FirstHp+=gameState.getBoard().getUnit(column,row).getCurrentHp();
-                    liveFirst++;
-                    if (gameState.getBoard().getUnit(column,row).isGeneral()){
-                        liveGeneralFirst++;
+
+        for (int column = 0; column < Board.COLUMNS; column++) {
+            for (int row = 0; row < Board.ROWS; row++) {
+                Unit unit = gameState.getBoard().getUnit(column, row);
+                if (unit.isAlive()) {
+                    if (unit.getPlayerType() == PlayerType.FIRST_PLAYER) {
+                        firstHp += unit.getCurrentHp();
+                        liveFirst++;
+                        if (unit.isGeneral()) {
+                            liveGeneralFirst++;
+                        }
+                    } else if (unit.getPlayerType() == PlayerType.SECOND_PLAYER) {
+                        secondHp += unit.getCurrentHp();
+                        liveSecond++;
+                        if (unit.isGeneral()) {
+                            liveGeneralSecond++;
+                        }
                     }
                 }
-                else if(gameState.getBoard().getUnit(column,row).getPlayerType() == PlayerType.SECOND_PLAYER &&
-                        gameState.getBoard().getUnit(column,row).isAlive()){
-                    SecondHp+=gameState.getBoard().getUnit(column,row).getCurrentHp();
-                    liveSecond++;
-                    if (gameState.getBoard().getUnit(column,row).isGeneral()){
-                        liveGeneralSecond++;
-                    }
-                }
             }
         }
-        AllHp = FirstHp + SecondHp;
-        double AllLives = liveFirst + liveSecond;
-        double perFirst =  ((double)FirstHp/AllHp)*100;
-        double perSecond = ((double)SecondHp/AllHp)*100;
-        double result = perSecond/perFirst;
+        int allHp = firstHp + secondHp;
 
-        double perLiveFirst = ((double)liveFirst/AllLives)*100;
-        double perLiveSecond = ((double)liveSecond/AllLives)*100;
+        double perFirst = ((double) firstHp / allHp) * 100;
+        double perSecond = ((double) secondHp / allHp) * 100;
 
-        double modWinner = 1;
-        if(currentPlayerType == PlayerType.SECOND_PLAYER ){
-            if (liveSecond > liveFirst && gameState.getGameStage() == GameStage.ENDED){
-                modWinner = 100;
-            }
-            return (((liveSecond*perSecond+liveGeneralSecond*10)/((liveFirst*6+liveGeneralFirst*12)+1)))*modWinner;
+        double valueFirst = (liveFirst * perFirst + liveGeneralFirst * 10) / ((liveSecond * 6 + liveGeneralSecond * 12) + 1);
+        double valueSecond = (liveSecond * perSecond + liveGeneralSecond * 10) / ((liveFirst * 6 + liveGeneralFirst * 12) + 1);
+
+        double result;
+        if (currentPlayerType == PlayerType.FIRST_PLAYER) {
+            result = (valueFirst - valueSecond) / (valueFirst + valueSecond);
+        } else {
+            result = (valueSecond - valueFirst) / (valueFirst + valueSecond);
         }
-        else{
-            if (liveFirst > liveSecond && gameState.getGameStage() == GameStage.ENDED){
-                modWinner = 100;
-            }
-            return (((liveFirst*perFirst+liveGeneralFirst*10)/((liveSecond*6+liveGeneralSecond*12)+1)))*modWinner;
-        }
+
+        return result;
     }
-
     private double knightTacticUtility(GameState gameState){
-        int FirstHp = 0;
-        int SecondHp = 0;
+        int firstHp = 0;
+        int secondHp = 0;
         int liveSecond = 0;
         int liveFirst = 0;
-
-        int AllHp;
         int liveGeneralFirst = 0;
         int liveGeneralSecond = 0;
-        for(int column = 0;column < Board.COLUMNS;column++){
-            for(int row = 0; row < Board.ROWS;row++){
-                if(gameState.getBoard().getUnit(column,row).getPlayerType() == PlayerType.FIRST_PLAYER &&
-                        gameState.getBoard().getUnit(column,row).isAlive()){
-                    FirstHp+=gameState.getBoard().getUnit(column,row).getCurrentHp();
-                    liveFirst++;
-                    if (gameState.getBoard().getUnit(column,row).isGeneral()){
-                        liveGeneralFirst++;
+
+        for (int column = 0; column < Board.COLUMNS; column++) {
+            for (int row = 0; row < Board.ROWS; row++) {
+                Unit unit = gameState.getBoard().getUnit(column, row);
+                if (unit.isAlive()) {
+                    if (unit.getPlayerType() == PlayerType.FIRST_PLAYER) {
+                        firstHp += unit.getCurrentHp();
+                        liveFirst++;
+                        if (unit.isGeneral()) {
+                            liveGeneralFirst++;
+                        }
+                    } else if (unit.getPlayerType() == PlayerType.SECOND_PLAYER) {
+                        secondHp += unit.getCurrentHp();
+                        liveSecond++;
+                        if (unit.isGeneral()) {
+                            liveGeneralSecond++;
+                        }
                     }
                 }
-                else if(gameState.getBoard().getUnit(column,row).getPlayerType() == PlayerType.SECOND_PLAYER &&
-                        gameState.getBoard().getUnit(column,row).isAlive()){
-                    SecondHp+=gameState.getBoard().getUnit(column,row).getCurrentHp();
-                    liveSecond++;
-                    if (gameState.getBoard().getUnit(column,row).isGeneral()){
-                        liveGeneralSecond++;
-                    }
-                }
             }
         }
-        AllHp = FirstHp + SecondHp;
-        double AllLives = liveFirst + liveSecond;
-        double perFirst =  ((double)FirstHp/AllHp)*100;
-        double perSecond = ((double)SecondHp/AllHp)*100;
-        double result = perSecond/perFirst;
+        int allHp = firstHp + secondHp;
 
-        double perLiveFirst = ((double)liveFirst/AllLives)*100;
-        double perLiveSecond = ((double)liveSecond/AllLives)*100;
+        double perFirst = ((double) firstHp / allHp) * 100;
+        double perSecond = ((double) secondHp / allHp) * 100;
 
-        double modWinner = 1;
-        if(currentPlayerType == PlayerType.SECOND_PLAYER){
-            if (liveSecond > liveFirst && gameState.getGameStage() == GameStage.ENDED){
-                modWinner = 100;
-            }
-            return (((liveSecond*perSecond+liveGeneralSecond*10)/((liveFirst*6+liveGeneralFirst*12)+1)))*modWinner;
+        double valueFirst = (liveFirst * perFirst + liveGeneralFirst * 10) / ((liveSecond * 6 + liveGeneralSecond * 12) + 1);
+        double valueSecond = (liveSecond * perSecond + liveGeneralSecond * 10) / ((liveFirst * 6 + liveGeneralFirst * 12) + 1);
+
+        double result;
+        if (currentPlayerType == PlayerType.FIRST_PLAYER) {
+            result = (valueFirst - valueSecond) / (valueFirst + valueSecond);
+        } else {
+            result = (valueSecond - valueFirst) / (valueFirst + valueSecond);
         }
-        else{
-            if (liveFirst > liveSecond && gameState.getGameStage() == GameStage.ENDED){
-                modWinner = 100;
-            }
-            return (((liveFirst*perFirst+liveGeneralFirst*10)/((liveSecond*6+liveGeneralSecond*12)+1)))*modWinner;
-        }
+
+        return result;
 
     }
     private double archerTacticUtility(GameState gameState){
-        int FirstHp = 0;
-        int SecondHp = 0;
+        int firstHp = 0;
+        int secondHp = 0;
         int liveSecond = 0;
         int liveFirst = 0;
-        int AllHp;
         int liveGeneralFirst = 0;
         int liveGeneralSecond = 0;
-        for(int column = 0;column < Board.COLUMNS;column++){
-            for(int row = 0; row < Board.ROWS;row++){
-                if(gameState.getBoard().getUnit(column,row).getPlayerType() == PlayerType.FIRST_PLAYER &&
-                        gameState.getBoard().getUnit(column,row).isAlive()){
-                    FirstHp+=gameState.getBoard().getUnit(column,row).getCurrentHp();
-                    liveFirst++;
-                    if (gameState.getBoard().getUnit(column,row).isGeneral()){
-                        liveGeneralFirst++;
+
+        for (int column = 0; column < Board.COLUMNS; column++) {
+            for (int row = 0; row < Board.ROWS; row++) {
+                Unit unit = gameState.getBoard().getUnit(column, row);
+                if (unit.isAlive()) {
+                    if (unit.getPlayerType() == PlayerType.FIRST_PLAYER) {
+                        firstHp += unit.getCurrentHp();
+                        liveFirst++;
+                        if (unit.isGeneral()) {
+                            liveGeneralFirst++;
+                        }
+                    } else if (unit.getPlayerType() == PlayerType.SECOND_PLAYER) {
+                        secondHp += unit.getCurrentHp();
+                        liveSecond++;
+                        if (unit.isGeneral()) {
+                            liveGeneralSecond++;
+                        }
                     }
                 }
-                else if(gameState.getBoard().getUnit(column,row).getPlayerType() == PlayerType.SECOND_PLAYER &&
-                        gameState.getBoard().getUnit(column,row).isAlive()){
-                    SecondHp+=gameState.getBoard().getUnit(column,row).getCurrentHp();
-                    liveSecond++;
-                    if (gameState.getBoard().getUnit(column,row).isGeneral()){
-                        liveGeneralSecond++;
-                    }
-                }
             }
         }
-        AllHp = FirstHp + SecondHp;
-        double AllLives = liveFirst + liveSecond;
-        double perFirst =  ((double)FirstHp/AllHp)*100;
-        double perSecond = ((double)SecondHp/AllHp)*100;
-        double result = perSecond/perFirst;
+        int allHp = firstHp + secondHp;
 
-        double perLiveFirst = ((double)liveFirst/AllLives)*100;
-        double perLiveSecond = ((double)liveSecond/AllLives)*100;
+        double perFirst = ((double) firstHp / allHp) * 100;
+        double perSecond = ((double) secondHp / allHp) * 100;
 
-        double modWinner = 1;
-        if(currentPlayerType == PlayerType.SECOND_PLAYER ){
-            if (liveSecond > liveFirst && gameState.getGameStage() == GameStage.ENDED){
-                modWinner = 100;
-            }
-            return (((liveSecond*perSecond+liveGeneralSecond*10)/((liveFirst*6+liveGeneralFirst*12)+1)))*modWinner;
+        double valueFirst = (liveFirst * perFirst + liveGeneralFirst * 10) / ((liveSecond * 6 + liveGeneralSecond * 12) + 1);
+        double valueSecond = (liveSecond * perSecond + liveGeneralSecond * 10) / ((liveFirst * 6 + liveGeneralFirst * 12) + 1);
+
+        double result;
+        if (currentPlayerType == PlayerType.FIRST_PLAYER) {
+            result = (valueFirst - valueSecond) / (valueFirst + valueSecond);
+        } else {
+            result = (valueSecond - valueFirst) / (valueFirst + valueSecond);
         }
-        else{
-            if (liveFirst > liveSecond && gameState.getGameStage() == GameStage.ENDED){
-                modWinner = 100;
-            }
-            return (((liveFirst*perFirst+liveGeneralFirst*10)/((liveSecond*6+liveGeneralSecond*12)+1)))*modWinner;
-        }
+
+        return result;
     }
     private double healerTacticUtility(GameState gameState){
-        int FirstHp = 0;
-        int SecondHp = 0;
+        int firstHp = 0;
+        int secondHp = 0;
         int liveSecond = 0;
         int liveFirst = 0;
-        int AllHp;
         int liveGeneralFirst = 0;
         int liveGeneralSecond = 0;
-        for(int column = 0;column < Board.COLUMNS;column++){
-            for(int row = 0; row < Board.ROWS;row++){
-                if(gameState.getBoard().getUnit(column,row).getPlayerType() == PlayerType.FIRST_PLAYER &&
-                        gameState.getBoard().getUnit(column,row).isAlive()){
-                    FirstHp+=gameState.getBoard().getUnit(column,row).getCurrentHp();
-                    liveFirst++;
-                    if (gameState.getBoard().getUnit(column,row).isGeneral()){
-                        liveGeneralFirst++;
+
+        for (int column = 0; column < Board.COLUMNS; column++) {
+            for (int row = 0; row < Board.ROWS; row++) {
+                Unit unit = gameState.getBoard().getUnit(column, row);
+                if (unit.isAlive()) {
+                    if (unit.getPlayerType() == PlayerType.FIRST_PLAYER) {
+                        firstHp += unit.getCurrentHp();
+                        liveFirst++;
+                        if (unit.isGeneral()) {
+                            liveGeneralFirst++;
+                        }
+                    } else if (unit.getPlayerType() == PlayerType.SECOND_PLAYER) {
+                        secondHp += unit.getCurrentHp();
+                        liveSecond++;
+                        if (unit.isGeneral()) {
+                            liveGeneralSecond++;
+                        }
                     }
                 }
-                else if(gameState.getBoard().getUnit(column,row).getPlayerType() == PlayerType.SECOND_PLAYER &&
-                        gameState.getBoard().getUnit(column,row).isAlive()){
-                    SecondHp+=gameState.getBoard().getUnit(column,row).getCurrentHp();
-                    liveSecond++;
-                    if (gameState.getBoard().getUnit(column,row).isGeneral()){
-                        liveGeneralSecond++;
-                    }
-                }
             }
         }
-        AllHp = FirstHp + SecondHp;
-        double AllLives = liveFirst + liveSecond;
-        double perFirst =  ((double)FirstHp/AllHp)*100;
-        double perSecond = ((double)SecondHp/AllHp)*100;
-        double result = perSecond/perFirst;
+        int allHp = firstHp + secondHp;
 
-        double perLiveFirst = ((double)liveFirst/AllLives)*100;
-        double perLiveSecond = ((double)liveSecond/AllLives)*100;
+        double perFirst = ((double) firstHp / allHp) * 100;
+        double perSecond = ((double) secondHp / allHp) * 100;
 
-        double modWinner = 1;
-        if(currentPlayerType == PlayerType.SECOND_PLAYER){
-            if (liveSecond > liveFirst && gameState.getGameStage() == GameStage.ENDED){
-                modWinner = 10;
-            }
-            return (((liveSecond*perSecond+liveGeneralSecond*10)/((liveFirst*6+liveGeneralFirst*12)+1)))*modWinner;
+        double valueFirst = (liveFirst * perFirst + liveGeneralFirst * 10) / ((liveSecond * 6 + liveGeneralSecond * 12) + 1);
+        double valueSecond = (liveSecond * perSecond + liveGeneralSecond * 10) / ((liveFirst * 6 + liveGeneralFirst * 12) + 1);
+
+        double result;
+        if (currentPlayerType == PlayerType.FIRST_PLAYER) {
+            result = (valueFirst - valueSecond) / (valueFirst + valueSecond);
+        } else {
+            result = (valueSecond - valueFirst) / (valueFirst + valueSecond);
         }
-        else{
-            if (liveFirst > liveSecond && gameState.getGameStage() == GameStage.ENDED){
-                modWinner = 10;
-            }
-            return (((liveFirst*perFirst+liveGeneralFirst*10)/((liveSecond*6+liveGeneralSecond*12)+1)))*modWinner;
-        }
+
+        return result;
     }
 
 

@@ -602,20 +602,18 @@ public class GameState {
                     currentPlayer == PlayerType.FIRST_PLAYER
                             ? PlayerType.SECOND_PLAYER
                             : PlayerType.FIRST_PLAYER;
-            List<Position> unitsPositionsOpponentPlayer = collectPositionsOfPlayer(opponentPlayer, tmp.getCurrentBoard());
 
-            for (Position to : unitsPositionsOpponentPlayer) {
-                GameState goodVar = this.getCopy();
-                GameState badVar = this.getCopy();
-                double goodChance = ((double) (21 - (ArmDefender - AccAttacker)) /20);
-                double badChance = 1 - goodChance;
-                goodVar.getCurrentBoard().getUnit(to.x(), to.y()).setArmor(-50);
-                goodVar.makeMove(move);
-                possibleIssue.add(new StateChanceResult(goodVar, goodChance));
-                badVar.getCurrentBoard().getUnit(to.x(), to.y()).setArmor(50);
-                badVar.makeMove(move);
-                possibleIssue.add(new StateChanceResult(badVar, badChance));
-            }
+            GameState goodVar = this.getCopy();
+            GameState badVar = this.getCopy();
+            double goodChance = ((double) (21 - (ArmDefender - AccAttacker)) /20);
+            double badChance = 1 - goodChance;
+            goodVar.getCurrentBoard().getUnit(move.getTo().x(), move.getTo().y()).setArmor(-50);
+            goodVar.makeMove(move);
+            possibleIssue.add(new StateChanceResult(goodVar, goodChance));
+            badVar.getCurrentBoard().getUnit(move.getTo().x(), move.getTo().y()).setArmor(50);
+            badVar.makeMove(move);
+            possibleIssue.add(new StateChanceResult(badVar, badChance));
+
 
         }
         return possibleIssue;
