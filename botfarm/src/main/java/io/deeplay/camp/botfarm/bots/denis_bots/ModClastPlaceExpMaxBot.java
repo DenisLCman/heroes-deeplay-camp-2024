@@ -26,15 +26,17 @@ import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.RecursiveTask;
 
-public class ClastPlaceExpMaxBot extends Bot {
+public class ModClastPlaceExpMaxBot extends Bot {
     private static final Logger logger = LoggerFactory.getLogger(RandomBot.class);
     BotTactic botTactic;
     UtilityFunction tacticUtility;
     UnitType currentGeneral;
     int maxDepth;
     @Setter boolean firstPlaceInGame = true;
+    double eps = 0.05;
+    static final Double PRECISION = 0.0;
 
-    public ClastPlaceExpMaxBot(PlayerType playerType, int maxDepth){
+    public ModClastPlaceExpMaxBot(PlayerType playerType, int maxDepth){
         tacticUtility = new TacticUtility(BotTactic.KNIGHT_TACTIC);
         tacticUtility.setCurrentPlayerType(playerType);
         this.maxDepth = maxDepth;
@@ -233,8 +235,8 @@ public class ClastPlaceExpMaxBot extends Bot {
                 points.add(features);
             }
             KMeans kMeans = new KMeans();
-            int numClusters = Math.min(3, movesRoot.size());  // количество кластеров можно варьировать
-            List<KMeans.Cluster> clusters = kMeans.kMeansCluster(points, numClusters, 100);
+            int numClusters = Math.min(4, movesRoot.size());  // количество кластеров можно варьировать
+            List<KMeans.Cluster> clusters = kMeans.kMeansCluster(points, numClusters, 10);
 
 
             List<UtilityMoveResult> bestMoves = new ArrayList<>();
@@ -253,7 +255,7 @@ public class ClastPlaceExpMaxBot extends Bot {
                     @Override
                     protected UtilityMoveResult compute() {
                         double result = expectMaxAlg(gameState, moveBestClast.event, originDepth,
-                                Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, true);
+                                Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, true, 1);
                         return new UtilityMoveResult(result, moveBestClast.event);
                     }
                 };
@@ -272,8 +274,9 @@ public class ClastPlaceExpMaxBot extends Bot {
 
 
 
-    public double alphaBetaMinMaxAlg(GameState root, int depth, double alpha, double beta, boolean maxPlayer) throws GameException {
-        if(depth == 0 || root.getGameStage() == GameStage.ENDED){
+
+    public double alphaBetaMinMaxAlg(GameState root, int depth, double alpha, double beta, boolean maxPlayer, double p) throws GameException {
+        if(depth == 0 || root.getGameStage() == GameStage.ENDED || p < eps){
             return tacticUtility.getMoveUtility(root);
         }
         List<MakeMoveEvent> movesRoot = root.getPossibleMoves();
@@ -304,23 +307,23 @@ public class ClastPlaceExpMaxBot extends Bot {
             else {
                 GameState gameStateNode = root.getCopy();
                 gameStateNode.changeCurrentPlayer();
-                return alphaBetaMinMaxAlg(gameStateNode, depth, alpha,beta,!maxPlayer);
+                return alphaBetaMinMaxAlg(gameStateNode, depth, alpha,beta,!maxPlayer, p);
             }
         } else {
             for (UtilityMoveResult moveEvent : bestMoves) {
-                double v = expectMaxAlg(root, moveEvent.event, depth, alpha,beta,maxPlayer);
+                double v = expectMaxAlg(root, moveEvent.event, depth, alpha,beta,maxPlayer, p);
                 bestValue = maxPlayer ? Math.max(bestValue,v) : Math.min(bestValue,v);
             }
             return bestValue;
         }
     }
 
-    private double expectMaxAlg(GameState root, MakeMoveEvent event, int depth, double alpha, double beta, boolean maxPlayer) throws GameException {
+    private double expectMaxAlg(GameState root, MakeMoveEvent event, int depth, double alpha, double beta, boolean maxPlayer, double p) throws GameException {
         List<StateChanceResult> chancesRoot = root.getPossibleIssue(event);
         double excepted = 0;
         for (StateChanceResult chance : chancesRoot) {
             GameState nodeGameState = chance.gameState().getCopy();
-            double v = alphaBetaMinMaxAlg(nodeGameState, depth-1, alpha,beta,maxPlayer);
+            double v = alphaBetaMinMaxAlg(nodeGameState, depth-1, alpha,beta,maxPlayer, p*chance.chance());
             excepted += chance.chance() * v;
         }
         return excepted;
@@ -376,7 +379,7 @@ public class ClastPlaceExpMaxBot extends Bot {
                 @Override
                 protected UtilityMoveResult compute() {
                     MakeMoveEvent move = movesRoot.get(points.indexOf(point));
-                    double result = expectMaxAlg(gameState, move, 1, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, maxPlayer);
+                    double result = expectMaxAlg(gameState, move, 1, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, maxPlayer,1);
                     return new UtilityMoveResult(result, move);
                 }
             };
@@ -389,5 +392,4 @@ public class ClastPlaceExpMaxBot extends Bot {
 
         return getMaxFromTasks(results);
     }
-
 }
