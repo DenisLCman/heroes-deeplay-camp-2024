@@ -9,7 +9,6 @@ import io.deeplay.camp.game.exceptions.GameException;
 import io.deeplay.camp.game.mechanics.GameStage;
 import io.deeplay.camp.game.mechanics.GameState;
 import io.deeplay.camp.game.mechanics.PlayerType;
-import io.deeplay.camp.game.mechanics.PossibleActions;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -278,9 +277,9 @@ public class AiBot extends Bot {
     }
 
     private double expectMaxAlg(GameState root, MakeMoveEvent event, int depth, double alpha, double beta, boolean maxPlayer) throws GameException {
-        List<StateChanceResult> chancesRoot = root.getPossibleIssue(event);
+        List<StateChance> chancesRoot = root.getPossibleState(event);
             double excepted = 0;
-            for (StateChanceResult chance : chancesRoot) {
+            for (StateChance chance : chancesRoot) {
                 GameState nodeGameState = chance.gameState().getCopy();
                 double v = alphaBetaMinMaxAlg(nodeGameState, depth-1, alpha,beta,maxPlayer);
                 excepted += chance.chance() * v;

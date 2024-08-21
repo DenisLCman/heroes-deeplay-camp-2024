@@ -292,23 +292,10 @@ public class PlaceABMinMaxBot extends Bot {
     private UtilityMoveResult getMaxFromTasks(List<UtilityMoveResult> results){
         UtilityMoveResult bestValue = new UtilityMoveResult(Double.NEGATIVE_INFINITY, null);
         for (UtilityMoveResult task : results) {
-            System.out.println("Значение цены у данного хода: " + task.value);
             if (bestValue.value < task.value) {
                 bestValue = task;
             }
         }
-        return bestValue;
-    }
-
-    private UtilityMoveResult getMinFromTasks(List<UtilityMoveResult> results){
-        UtilityMoveResult bestValue = new UtilityMoveResult(Double.POSITIVE_INFINITY, null);
-        for (UtilityMoveResult task : results) {
-            System.out.println("Значение цены у данного хода: " + task.value);
-            if (task.value < bestValue.value) {
-                bestValue = task;
-            }
-        }
-
         return bestValue;
     }
 

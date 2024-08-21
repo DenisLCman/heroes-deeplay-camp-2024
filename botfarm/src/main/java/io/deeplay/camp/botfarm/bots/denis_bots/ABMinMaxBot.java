@@ -142,16 +142,6 @@ public class ABMinMaxBot extends Bot {
         return bestValue;
     }
 
-    private UtilityMoveResult getMinFromTasks(List<UtilityMoveResult> results){
-        UtilityMoveResult bestValue = new UtilityMoveResult(Double.POSITIVE_INFINITY, null);
-        for (UtilityMoveResult task : results) {
-            if (task.value < bestValue.value) {
-                bestValue = task;
-            }
-        }
-
-        return bestValue;
-    }
 
 
 }

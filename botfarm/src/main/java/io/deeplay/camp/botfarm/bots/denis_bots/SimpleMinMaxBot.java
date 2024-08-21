@@ -2,10 +2,6 @@ package io.deeplay.camp.botfarm.bots.denis_bots;
 
 import io.deeplay.camp.botfarm.bots.Bot;
 import io.deeplay.camp.botfarm.bots.RandomBot;
-import io.deeplay.camp.game.entities.Board;
-import io.deeplay.camp.game.entities.Position;
-import io.deeplay.camp.game.entities.StateChanceResult;
-import io.deeplay.camp.game.entities.UnitType;
 import io.deeplay.camp.game.events.MakeMoveEvent;
 import io.deeplay.camp.game.events.PlaceUnitEvent;
 import io.deeplay.camp.game.exceptions.GameException;

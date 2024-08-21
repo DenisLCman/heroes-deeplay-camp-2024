@@ -8,32 +8,28 @@ public class KMeans {
 
     private final Random random = new Random();
 
-    public List<Cluster> kMeansCluster(List<UtilityMoveResult> points, int k, int maxIterations) {
+    public List<Cluster> kMeansCluster(List<UtilityMoveResult> points, int k, int maxIter) {
         List<Cluster> clusters = initializeClusters(points, k);
-
-        for (int iteration = 0; iteration < maxIterations; iteration++) {
+        for (int iter = 0; iter < maxIter; iter++) {
             for (Cluster cluster : clusters) {
                 cluster.points.clear();
             }
             for (UtilityMoveResult point : points) {
-                Cluster closestCluster = findClosestCluster(clusters, point);
+                Cluster closestCluster = findCloseCluster(clusters, point);
                 closestCluster.points.add(point);
             }
-
             boolean centroidsChanged = false;
             for (Cluster cluster : clusters) {
-                UtilityMoveResult newCentroid = calculateCentroid(cluster.points);
+                UtilityMoveResult newCentroid = calcCentroid(cluster.points);
                 if (!equals(cluster.centroid, newCentroid)) {
                     cluster.centroid = newCentroid;
                     centroidsChanged = true;
                 }
             }
-
             if (!centroidsChanged) {
                 break;
             }
         }
-
         return clusters;
     }
 
@@ -46,34 +42,33 @@ public class KMeans {
         return clusters;
     }
 
-    private Cluster findClosestCluster(List<Cluster> clusters, UtilityMoveResult point) {
-        Cluster closestCluster = null;
+    private Cluster findCloseCluster(List<Cluster> clusters, UtilityMoveResult point) {
+        Cluster closeCluster = null;
         double minDistance = Double.MAX_VALUE;
         for (Cluster cluster : clusters) {
-            double distance = calculateDistance(cluster.centroid, point);
+            double distance = calcDistance(cluster.centroid, point);
             if (distance < minDistance) {
                 minDistance = distance;
-                closestCluster = cluster;
+                closeCluster = cluster;
             }
         }
-        return closestCluster;
+        return closeCluster;
     }
 
-    private UtilityMoveResult calculateCentroid(List<UtilityMoveResult> points) {
+    private UtilityMoveResult calcCentroid(List<UtilityMoveResult> points) {
         if (points.isEmpty()) {
-            return randomCentroid();
+            return randCentroid();
         }
-
         double sum = 0;
         for (UtilityMoveResult point : points) {
             sum += point.value;
         }
         double average = sum / points.size();
 
-        return new UtilityMoveResult(average, null); // null для MakeMoveEvent, так как мы считаем только значение
+        return new UtilityMoveResult(average, null);
     }
 
-    private double calculateDistance(UtilityMoveResult p1, UtilityMoveResult p2) {
+    private double calcDistance(UtilityMoveResult p1, UtilityMoveResult p2) {
         return Math.abs(p1.value - p2.value);
     }
 
@@ -81,9 +76,11 @@ public class KMeans {
         return p1.value == p2.value;
     }
 
-    private UtilityMoveResult randomCentroid() {
+    private UtilityMoveResult randCentroid() {
         Random r = new Random();
-        double randomValue = - 1 + (1 - -1) * r.nextDouble();
+        double min = -1;
+        double max = 1;
+        double randomValue = min + (max - min) * r.nextDouble();
         return new UtilityMoveResult(randomValue, null);
     }
 
@@ -96,7 +93,6 @@ public class KMeans {
             this.points = new ArrayList<>();
         }
     }
-
 
 
 }
