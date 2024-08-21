@@ -1,5 +1,8 @@
 package io.deeplay.camp.game.entities;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 import io.deeplay.camp.game.mechanics.PlayerType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,16 +19,6 @@ public class Army {
   public Army(PlayerType owner) {
     this.owner = owner;
     units = new Unit[6];
-  }
-
-  public Army(Army army, Board board) {
-    this.owner = army.owner;
-    this.generalType = army.generalType;
-    this.isAliveGeneral = army.isAliveGeneral;
-    this.isBuffed = army.isBuffed;
-    this.units = new Unit[army.units.length];
-    fillArmy(board);
-
   }
 
   public void fillArmy(Board board) {
@@ -93,5 +86,18 @@ public class Army {
       }
     }
     return false;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    Army army = (Army) o;
+    return isAliveGeneral == army.isAliveGeneral && isBuffed == army.isBuffed && owner == army.owner && generalType == army.generalType && Objects.deepEquals(units, army.units);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(owner, generalType, isAliveGeneral, isBuffed, Arrays.hashCode(units));
   }
 }

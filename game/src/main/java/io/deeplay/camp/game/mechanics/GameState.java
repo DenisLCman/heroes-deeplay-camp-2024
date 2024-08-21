@@ -10,11 +10,13 @@ import io.deeplay.camp.game.exceptions.ErrorCode;
 import io.deeplay.camp.game.exceptions.GameException;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Setter
 @Getter
@@ -42,12 +44,14 @@ public class GameState {
         gameStage = GameStage.PLACEMENT_STAGE;
     }
 
-    public GameState(GameState gameState) {
-        this.board = new Board(gameState.board);
+    private GameState(GameState gameState) {
+        this.board = gameState.board.getCopy();
         this.gameStage = gameState.gameStage;
         this.currentPlayer = gameState.currentPlayer;
-        this.armyFirst = new Army(gameState.armyFirst, this.board);
-        this.armySecond = new Army(gameState.armySecond, this.board);
+        this.armyFirst = new Army(PlayerType.FIRST_PLAYER);
+        armyFirst.fillArmy(this.board);
+        this.armySecond = new Army(PlayerType.SECOND_PLAYER);
+        armySecond.fillArmy(this.board);
         this.countRound = gameState.countRound;
         this.winner = gameState.winner;
     }
@@ -569,53 +573,56 @@ public class GameState {
                 addValidMoves(possibleMoves, unitsPositionsOpponentPlayer, from, unit);
             }
         }
-
         return possibleMoves;
     }
 
-    public List<StateChanceResult> getPossibleIssue(MakeMoveEvent move) throws GameException {
-        List<StateChanceResult> possibleIssue = new ArrayList<>();
+    public List<StateChance> getPossibleState(MakeMoveEvent move) throws GameException {
+        List<StateChance> possibleIssue = new ArrayList<>();
         int AccAttacker = move.getAttacker().getAccuracy();
         int ArmDefender = getCurrentBoard().getUnit(move.getTo().x(), move.getTo().y()).getArmor();
 
         if(move.getAttacker().getUnitType() == UnitType.KNIGHT || move.getAttacker().getUnitType() == UnitType.ARCHER){
+
             GameState goodVar = this.getCopy();
             GameState badVar = this.getCopy();
             double goodChance = ((double) (21 - (ArmDefender - AccAttacker)) /20);
             double badChance = 1 - goodChance;
+
+            int originAcc = this.getCurrentBoard().getUnit(move.getFrom().x(), move.getFrom().y()).getAccuracy();
+
             goodVar.getCurrentBoard().getUnit(move.getFrom().x(), move.getFrom().y()).setAccuracy(50);
             goodVar.makeMove(move);
-            possibleIssue.add(new StateChanceResult(goodVar, goodChance));
+            goodVar.getCurrentBoard().getUnit(move.getFrom().x(), move.getFrom().y()).setAccuracy(originAcc);
+            possibleIssue.add(new StateChance(goodVar, goodChance));
             badVar.getCurrentBoard().getUnit(move.getFrom().x(), move.getFrom().y()).setAccuracy(-50);
             badVar.makeMove(move);
-            possibleIssue.add(new StateChanceResult(badVar, badChance));
+            badVar.getCurrentBoard().getUnit(move.getFrom().x(), move.getFrom().y()).setAccuracy(originAcc);
+            possibleIssue.add(new StateChance(badVar, badChance));
         }
         if(move.getAttacker().getUnitType() == UnitType.HEALER){
+            int originAcc = this.getCurrentBoard().getUnit(move.getFrom().x(), move.getFrom().y()).getAccuracy();
             GameState goodVar = this.getCopy();
             goodVar.getCurrentBoard().getUnit(move.getFrom().x(), move.getFrom().y()).setAccuracy(50);
             goodVar.makeMove(move);
-            possibleIssue.add(new StateChanceResult(goodVar, 1));
+            goodVar.getCurrentBoard().getUnit(move.getFrom().x(), move.getFrom().y()).setAccuracy(originAcc);
+            possibleIssue.add(new StateChance(goodVar, 1));
+
         }
         if(move.getAttacker().getUnitType() == UnitType.MAGE){
-            GameState tmp = this.getCopy();
-            PlayerType opponentPlayer =
-                    currentPlayer == PlayerType.FIRST_PLAYER
-                            ? PlayerType.SECOND_PLAYER
-                            : PlayerType.FIRST_PLAYER;
-            List<Position> unitsPositionsOpponentPlayer = collectPositionsOfPlayer(opponentPlayer, tmp.getCurrentBoard());
 
-            for (Position to : unitsPositionsOpponentPlayer) {
-                GameState goodVar = this.getCopy();
-                GameState badVar = this.getCopy();
-                double goodChance = ((double) (21 - (ArmDefender - AccAttacker)) /20);
-                double badChance = 1 - goodChance;
-                goodVar.getCurrentBoard().getUnit(to.x(), to.y()).setArmor(-50);
-                goodVar.makeMove(move);
-                possibleIssue.add(new StateChanceResult(goodVar, goodChance));
-                badVar.getCurrentBoard().getUnit(to.x(), to.y()).setArmor(50);
-                badVar.makeMove(move);
-                possibleIssue.add(new StateChanceResult(badVar, badChance));
-            }
+            GameState goodVar = this.getCopy();
+            GameState badVar = this.getCopy();
+            double goodChance = ((double) (21 - (ArmDefender - AccAttacker)) /20);
+            double badChance = 1 - goodChance;
+            int originArm = this.getCurrentBoard().getUnit(move.getTo().x(), move.getTo().y()).getArmor();
+            goodVar.getCurrentBoard().getUnit(move.getTo().x(), move.getTo().y()).setArmor(-50);
+            goodVar.makeMove(move);
+            goodVar.getCurrentBoard().getUnit(move.getTo().x(), move.getTo().y()).setArmor(originArm);
+            possibleIssue.add(new StateChance(goodVar, goodChance));
+            badVar.getCurrentBoard().getUnit(move.getTo().x(), move.getTo().y()).setArmor(50);
+            badVar.makeMove(move);
+            badVar.getCurrentBoard().getUnit(move.getTo().x(), move.getTo().y()).setArmor(originArm);
+            possibleIssue.add(new StateChance(badVar, badChance));
 
         }
         return possibleIssue;
@@ -683,6 +690,26 @@ public class GameState {
         } catch (GameException e) {
             logger.info("Не удалась стандартная расстановка!");
         }
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GameState gameState = (GameState) o;
+        return countRound == gameState.countRound &&
+                Objects.equals(board, gameState.board) &&
+                gameStage == gameState.gameStage &&
+                currentPlayer == gameState.currentPlayer &&
+                Objects.equals(armyFirst, gameState.armyFirst) &&
+                Objects.equals(armySecond, gameState.armySecond) &&
+                winner == gameState.winner;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(board, gameStage, currentPlayer, armyFirst, armySecond, countRound, winner);
     }
 
 }

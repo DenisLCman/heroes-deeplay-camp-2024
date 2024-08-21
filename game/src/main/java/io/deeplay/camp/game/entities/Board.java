@@ -9,7 +9,9 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 @Getter
 @AllArgsConstructor
@@ -24,7 +26,11 @@ public class Board {
         units = new Unit[COLUMNS][ROWS];
     }
 
-    public Board(Board board) {
+    public Board getCopy() {
+        return new Board(this);
+    }
+
+    private Board(Board board) {
         units = new Unit[COLUMNS][ROWS];
         for (int i = 0; i < ROWS; i++) {
             for (int j = 0; j < COLUMNS; j++) {
@@ -156,4 +162,20 @@ public class Board {
         }
         return emptyCellsAmount == 1;
     }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Board board = (Board) o;
+        return Objects.deepEquals(units, board.units);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.deepHashCode(units);
+    }
+
+
 }

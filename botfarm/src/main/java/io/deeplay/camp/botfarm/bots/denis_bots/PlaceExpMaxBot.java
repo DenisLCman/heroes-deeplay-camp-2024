@@ -9,7 +9,6 @@ import io.deeplay.camp.game.exceptions.GameException;
 import io.deeplay.camp.game.mechanics.GameStage;
 import io.deeplay.camp.game.mechanics.GameState;
 import io.deeplay.camp.game.mechanics.PlayerType;
-import io.deeplay.camp.game.mechanics.PossibleActions;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -90,7 +89,7 @@ public class PlaceExpMaxBot extends Bot {
             case HEALER_TACTIC -> currentGeneral = UnitType.HEALER;
             case KNIGHT_TACTIC -> currentGeneral = UnitType.KNIGHT;
             case ARCHER_TACTIC -> currentGeneral = UnitType.ARCHER;
-            case BASE_TACTIC -> currentGeneral = UnitType.HEALER;
+            case BASE_TACTIC -> currentGeneral = UnitType.KNIGHT;
         }
         tacticUtility.setBotTactic(botTactic);
     }
@@ -151,7 +150,7 @@ public class PlaceExpMaxBot extends Bot {
 
             for (UtilityPlaceResult task : results) {
                 try {
-                    System.out.println("Значение цены у данного расположения: " + task.value);
+                    //System.out.println("Значение цены у данного расположения: " + task.value);
                     if (bestValue.value < task.value) {
                         bestValue = task;
                     }
@@ -159,7 +158,7 @@ public class PlaceExpMaxBot extends Bot {
                 }
             }
 
-            System.out.println("Наивысшая цена расположения: " + bestValue.value);
+            //System.out.println("Наивысшая цена расположения: " + bestValue.value);
             return bestValue.place;
         }
 
@@ -278,9 +277,9 @@ public class PlaceExpMaxBot extends Bot {
     }
 
     private double expectMaxAlg(GameState root, MakeMoveEvent event, int depth, double alpha, double beta, boolean maxPlayer) throws GameException {
-        List<StateChanceResult> chancesRoot = root.getPossibleIssue(event);
+        List<StateChance> chancesRoot = root.getPossibleState(event);
         double excepted = 0;
-        for (StateChanceResult chance : chancesRoot) {
+        for (StateChance chance : chancesRoot) {
             GameState nodeGameState = chance.gameState().getCopy();
             double v = alphaBetaMinMaxAlg(nodeGameState, depth-1, alpha,beta,maxPlayer);
             excepted += chance.chance() * v;
@@ -302,19 +301,7 @@ public class PlaceExpMaxBot extends Bot {
     private UtilityMoveResult getMaxFromTasks(List<UtilityMoveResult> results){
         UtilityMoveResult bestValue = new UtilityMoveResult(Double.NEGATIVE_INFINITY, null);
         for (UtilityMoveResult task : results) {
-            System.out.println("Значение цены у данного хода: " + task.value);
             if (bestValue.value < task.value) {
-                bestValue = task;
-            }
-        }
-        return bestValue;
-    }
-
-    private UtilityMoveResult getMinFromTasks(List<UtilityMoveResult> results){
-        UtilityMoveResult bestValue = new UtilityMoveResult(Double.POSITIVE_INFINITY, null);
-        for (UtilityMoveResult task : results) {
-            System.out.println("Значение цены у данного хода: " + task.value);
-            if (task.value < bestValue.value) {
                 bestValue = task;
             }
         }
