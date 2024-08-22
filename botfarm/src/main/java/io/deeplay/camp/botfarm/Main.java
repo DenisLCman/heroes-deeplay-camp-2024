@@ -41,10 +41,10 @@ public class Main {
   }
 
   public static void BotFightFun() throws IOException {
-    ModClastPlaceExpMaxBot bot1 = new ModClastPlaceExpMaxBot(PlayerType.SECOND_PLAYER, 8);
-    ABMinMaxBot bot2 = new ABMinMaxBot(PlayerType.FIRST_PLAYER,5);
+    ModClastMCPlaceExpMaxBot bot1 = new ModClastMCPlaceExpMaxBot(PlayerType.SECOND_PLAYER, 7);
+    ABMinMaxBot bot2 = new ABMinMaxBot(PlayerType.FIRST_PLAYER, 3);
     for(int i = 0; i<1;i++){
-      BotFight fight = new BotFight(bot2, bot1, 100, true);
+      BotFight fight = new BotFight(bot2, bot1, 10, true);
     }
   }
 

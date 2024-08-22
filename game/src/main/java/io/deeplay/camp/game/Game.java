@@ -57,4 +57,8 @@ public class Game implements GameListener {
     gameState.restartGame();
     gameState = null;
   }
+
+  public void setGameState(GameState gameState) throws GameException {
+    this.gameState = gameState;
+  }
 }

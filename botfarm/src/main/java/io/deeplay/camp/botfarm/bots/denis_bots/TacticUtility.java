@@ -1,11 +1,25 @@
 package io.deeplay.camp.botfarm.bots.denis_bots;
 
+import io.deeplay.camp.botfarm.bots.Bot;
+import io.deeplay.camp.botfarm.bots.RandomBot;
+import io.deeplay.camp.game.Game;
 import io.deeplay.camp.game.entities.*;
+import io.deeplay.camp.game.events.ChangePlayerEvent;
+import io.deeplay.camp.game.events.GiveUpEvent;
+import io.deeplay.camp.game.events.MakeMoveEvent;
+import io.deeplay.camp.game.events.PlaceUnitEvent;
+import io.deeplay.camp.game.exceptions.GameException;
 import io.deeplay.camp.game.mechanics.GameStage;
 import io.deeplay.camp.game.mechanics.GameState;
 import io.deeplay.camp.game.mechanics.PlayerType;
 
 import lombok.Setter;
+import lombok.SneakyThrows;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ForkJoinTask;
+import java.util.concurrent.RecursiveTask;
 
 public class TacticUtility implements UtilityFunction{
 
@@ -375,4 +389,114 @@ public class TacticUtility implements UtilityFunction{
         }
         return resultProfit;
     }
+
+
+
+    @SneakyThrows
+    public double monteCarloAlg(GameState root, int countGame){
+        int countWin = 0;
+        RandomBot bot1 = new RandomBot();
+        RandomBot bot2 = new RandomBot();
+        Game game;
+
+        List<RecursiveTask<Integer>> recursiveTasks = new ArrayList<>();
+        for (int numGame = 0; numGame < countGame; numGame++) {
+            int finalNumGame = numGame;
+            RecursiveTask<Integer> task = new RecursiveTask<>() {
+                @SneakyThrows
+                @Override
+                protected Integer compute() {
+                    GameState gameStateNode = root.getCopy();
+                    GameState gameState = gameStateNode;
+
+                    executePlace(gameState, finalNumGame, bot1, bot2);
+                    gameState.changeCurrentPlayer();
+                    executePlace(gameState, finalNumGame, bot1, bot2);
+                    gameState.changeCurrentPlayer();
+
+                    while (gameState.getGameStage() != GameStage.ENDED) {
+                        executeMove(gameState, finalNumGame, bot1, bot2);
+                        gameState.makeChangePlayer(new ChangePlayerEvent(gameState.getCurrentPlayer()));
+                        executeMove(gameState, finalNumGame, bot1, bot2);
+                        gameState.makeChangePlayer(new ChangePlayerEvent(gameState.getCurrentPlayer()));
+                    }
+                    if(gameState.getWinner() == currentPlayerType){
+                        return 1;
+                    }
+                    return 0;
+                }
+            };
+            recursiveTasks.add(task);
+        }
+
+        List<Integer> results = ForkJoinTask.invokeAll(recursiveTasks).stream()
+                .map(ForkJoinTask::join)
+                .toList();
+
+        for (Integer task : results) {
+            countWin+=task;
+        }
+
+        return (double) countWin /countGame;
+    }
+
+
+
+
+    public void executeMove(GameState gameState, int countGame, Bot botFirst, Bot botSecond)
+            throws GameException{
+        for (int i = 0; i < 6; i++) {
+            if (gameState.getCurrentPlayer() == PlayerType.FIRST_PLAYER) {
+                long startTimer = System.currentTimeMillis();
+                MakeMoveEvent event = botFirst.generateMakeMoveEvent(gameState);
+                if (event == null) {
+                    continue;
+                }
+                long endTimer = System.currentTimeMillis();
+                if(endTimer - startTimer > 500000){
+                    GiveUpEvent giveUpEvent = new GiveUpEvent(PlayerType.FIRST_PLAYER);
+                    gameState.giveUp(giveUpEvent);
+                }
+                gameState.makeMove(event);
+            } else {
+                long startTimer = System.currentTimeMillis();
+                MakeMoveEvent event = botSecond.generateMakeMoveEvent(gameState);
+                if (event == null) {
+                    continue;
+                }
+                long endTimer = System.currentTimeMillis();
+
+                if(endTimer - startTimer > 500000){
+                    GiveUpEvent giveUpEvent = new GiveUpEvent(PlayerType.SECOND_PLAYER);
+                    gameState.giveUp(giveUpEvent);
+                }
+
+                gameState.makeMove(event);
+            }
+        }
+    }
+
+    public void executePlace(GameState gameState, int countGame, Bot botFirst, Bot botSecond)
+            throws GameException, InterruptedException {
+            if (gameState.getCurrentPlayer() == PlayerType.FIRST_PLAYER) {
+                for (int i = 0; i < 6; i++) {
+                    PlaceUnitEvent event = botFirst.generatePlaceUnitEvent(gameState);
+                    if(event == null){
+                        break;
+                    }
+                    gameState.makePlacement(event);
+                }
+            } else {
+                for (int i = 0; i < 6; i++) {
+                    PlaceUnitEvent event = botSecond.generatePlaceUnitEvent(gameState);
+                    if(event == null){
+                        break;
+                    }
+                    gameState.makePlacement(event);
+                }
+            }
+        }
+
+
+
 }
