@@ -19,4 +19,5 @@ public interface UtilityFunction {
     void setBotTactic(BotTactic botTactic);
     void setCurrentPlayerType(PlayerType playerType);
     PlayerType getCurrentPlayerType();
+    double monteCarloAlg(GameState root, int countGame);
 }
