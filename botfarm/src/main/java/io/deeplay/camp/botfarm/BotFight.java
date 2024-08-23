@@ -8,7 +8,6 @@ import io.deeplay.camp.game.entities.UnitType;
 import io.deeplay.camp.game.events.ChangePlayerEvent;
 import io.deeplay.camp.game.events.GiveUpEvent;
 import io.deeplay.camp.game.events.MakeMoveEvent;
-import io.deeplay.camp.game.events.PlaceUnitEvent;
 import io.deeplay.camp.game.exceptions.GameException;
 import io.deeplay.camp.game.mechanics.GameStage;
 import io.deeplay.camp.game.mechanics.GameState;
