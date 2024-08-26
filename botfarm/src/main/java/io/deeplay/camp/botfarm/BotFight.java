@@ -1,8 +1,8 @@
 package io.deeplay.camp.botfarm;
 
 import io.deeplay.camp.botfarm.bots.Bot;
-import io.deeplay.camp.botfarm.bots.RandomBot;
 import io.deeplay.camp.game.Game;
+import io.deeplay.camp.game.entities.Board;
 import io.deeplay.camp.game.entities.Unit;
 import io.deeplay.camp.game.entities.UnitType;
 import io.deeplay.camp.game.events.ChangePlayerEvent;
@@ -42,7 +42,7 @@ public class BotFight extends Thread{
     int fightId;
 
     JFrame frame;
-    JTextArea area1;
+    JTextArea field;
     JPanel contents;
 
     Thread threadFight;
@@ -58,11 +58,11 @@ public class BotFight extends Thread{
 
         frame = new JFrame();
         frame.setSize(800, 500);
-        area1 = new JTextArea(20, 50);
-        area1.setFont(new Font("Dialog", Font.PLAIN, 14));
-        area1.setTabSize(10);
+        field = new JTextArea(20, 50);
+        field.setFont(new Font("Dialog", Font.PLAIN, 14));
+        field.setTabSize(10);
         contents = new JPanel();
-        contents.add(area1);
+        contents.add(field);
         frame.add(contents);
         frame.setVisible(true);
 
@@ -90,14 +90,17 @@ public class BotFight extends Thread{
 
             game = new Game();
 
+
             executePlace(game.getGameState(), gameCount);
             game.getGameState().changeCurrentPlayer();
             executePlace(game.getGameState(), gameCount);
             game.getGameState().changeCurrentPlayer();
 
 
+/*
+            game.getGameState().setDefaultPlacement();
 
-            //game.getGameState().setDefaultPlacement();
+ */
             gameAnalisys.setCurrentBoard(game.getGameState().getCurrentBoard().getUnits());
 
             while (game.getGameState().getGameStage() != GameStage.ENDED) {
@@ -134,7 +137,7 @@ public class BotFight extends Thread{
 
                 game.makeMove(event);
                 Thread.sleep(timeSkeep);
-                outInFrame(event);
+                outInFrame(event, countGame);
             } else {
                 long startTimer = System.currentTimeMillis();
                 MakeMoveEvent event = botSecond.generateMakeMoveEvent(gameState);
@@ -150,7 +153,7 @@ public class BotFight extends Thread{
 
                 game.makeMove(event);
                 Thread.sleep(timeSkeep);
-                outInFrame(event);
+                outInFrame(event, countGame);
             }
         }
     }
@@ -159,60 +162,69 @@ public class BotFight extends Thread{
             throws GameException, InterruptedException {
         for (int i = 0; i < 6; i++) {
             if (gameState.getCurrentPlayer() == PlayerType.FIRST_PLAYER) {
-
-                game.placeUnit(botFirst.generatePlaceUnitEvent(gameState));
-
+                PlaceUnitEvent event = botFirst.generatePlaceUnitEvent(gameState);
+                game.placeUnit(event);
+                if(event == null){
+                    continue;
+                }
                 Thread.sleep(timeSkeep);
-                outInFrame(null);
+                outInFrame(null, countGame);
             } else {
-
-                game.placeUnit(botSecond.generatePlaceUnitEvent(gameState));
+                PlaceUnitEvent event =botSecond.generatePlaceUnitEvent(gameState);
+                if(event == null){
+                    continue;
+                }
+                game.placeUnit(event);
 
                 Thread.sleep(timeSkeep);
-                outInFrame(null);
+                outInFrame(null, countGame);
             }
         }
     }
 
     // Вывод в окно JFrame
-    public void outInFrame(MakeMoveEvent move) {
-        if (consoleOut) {
-            area1.setText(null);
-            if (move == null) {
-                area1.append("BEGIN NEW GAME!");
+    public void outInFrame(MakeMoveEvent move, int countGame) {
+        Board board = game.getGameState().getCurrentBoard();
+        field.setText(null);
+        field.append("Number game # "+ countGame);
+        field.append(separator);
+        field.append(separator);
+        field.append("SECOND_PLAYER");
+        field.append(separator);
+        field.append(separator);
+        String s = "20";
+        for (int row = 3; row >= 0; row--) {
+            field.append(String.format("%-" + s + "d", row));
+            for (int column = 0; column < 3; column++) {
+                field.append(
+                        String.format(
+                                "%-" + s + "s",
+                                outUnitIsMoved(board.getUnit(column, row))
+                                        + outUnitIsGeneral(board.getUnit(column, row))
+                                        + outUnitInfo(board.getUnit(column, row))));
             }
-            area1.append(separator);
-            area1.append(separator);
-            String s = "20";
-            for (int row = 3; row >= 0; row--) {
-                area1.append(String.format("%-" + s + "d", row));
-                for (int column = 0; column < 3; column++) {
-                    area1.append(
-                            String.format(
-                                    "%-" + s + "s",
-                                    outUnitIsMoved(game.getGameState().getCurrentBoard().getUnit(column, row))
-                                            + outUnitInfo(game.getGameState().getCurrentBoard().getUnit(column, row))));
-                }
-                area1.append(separator);
-                area1.append(separator);
-            }
+            field.append(separator);
+            field.append(separator);
+        }
+        field.append(String.format("%-25s", "#"));
+        field.append(String.format("%-25s", "0"));
+        field.append(String.format("%-27s", "1"));
+        field.append(String.format("%-26s", "2"));
+        field.append(separator);
+        field.append(separator);
+        field.append("FIRST_PLAYER");
+        field.append(separator);
+        field.append(separator);
+        field.append(separator);
 
-            area1.append(String.format("%-25s", "#"));
-            area1.append(String.format("%-25s", "0"));
-            area1.append(String.format("%-27s", "1"));
-            area1.append(String.format("%-26s", "2"));
-            area1.append(separator);
-            area1.append(separator);
-
-            if (move != null) {
-                area1.append(
-                        outUnitMove(
-                                move.getAttacker().getUnitType(),
-                                move.getFrom().x(),
-                                move.getFrom().y(),
-                                move.getTo().x(),
-                                move.getTo().y()));
-            }
+        if (move != null) {
+            field.append(
+                    outUnitMove(
+                            move.getAttacker().getUnitType(),
+                            move.getFrom().x(),
+                            move.getFrom().y(),
+                            move.getTo().x(),
+                            move.getTo().y()));
         }
     }
 
@@ -239,6 +251,17 @@ public class BotFight extends Thread{
             case MAGE -> result = "Wizard" + unit.getCurrentHp();
             case HEALER -> result = "Healer" + unit.getCurrentHp();
             default -> result = "------";
+        }
+        return result;
+    }
+
+    private String outUnitIsGeneral(Unit unit) {
+        String result = "";
+        if (unit == null) {
+            return "";
+        }
+        if (unit.isGeneral()) {
+            result = "G";
         }
         return result;
     }

@@ -1,13 +1,12 @@
 package io.deeplay.camp.botfarm.bots.denis_bots;
 
-import io.deeplay.camp.game.events.MakeMoveEvent;
 import io.deeplay.camp.game.events.PlaceUnitEvent;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
- class UtilityMoveResult {
+class UtilityPlaceResult {
     double value;
-    MakeMoveEvent event;
+    PlaceUnitEvent place;
 }

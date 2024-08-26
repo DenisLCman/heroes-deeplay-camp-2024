@@ -41,4 +41,9 @@ public class RandomUtility implements UtilityFunction{
         return currentPlayerType;
     }
 
+    @Override
+    public double monteCarloAlg(GameState root, int countGame) {
+        return 0;
+    }
+
 }
