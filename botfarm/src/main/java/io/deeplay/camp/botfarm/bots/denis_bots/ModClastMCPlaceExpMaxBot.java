@@ -73,23 +73,18 @@ public class ModClastMCPlaceExpMaxBot extends Bot {
             if(generalOpponent == UnitType.KNIGHT){
                 botTactic = BotTactic.ARCHER_TACTIC;
             } else if(generalOpponent == UnitType.HEALER){
-                botTactic = BotTactic.KNIGHT_TACTIC;
-            } else if (generalOpponent == UnitType.ARCHER) {
                 botTactic = BotTactic.HEALER_TACTIC;
+            } else if (generalOpponent == UnitType.ARCHER) {
+                botTactic = BotTactic.ARCHER_TACTIC;
             } else if (generalOpponent == UnitType.MAGE){
-                int rand = (int) (Math.random() * 2);
-                switch (rand){
-                    case 0 -> botTactic = BotTactic.MAGE_TACTIC;
-                    case 1 -> botTactic = BotTactic.KNIGHT_TACTIC;
-                }
+                botTactic = BotTactic.KNIGHT_TACTIC;
             }
         }
         switch (botTactic){
             case MAGE_TACTIC -> currentGeneral = UnitType.MAGE;
             case HEALER_TACTIC -> currentGeneral = UnitType.HEALER;
-            case KNIGHT_TACTIC -> currentGeneral = UnitType.KNIGHT;
+            case KNIGHT_TACTIC, BASE_TACTIC -> currentGeneral = UnitType.KNIGHT;
             case ARCHER_TACTIC -> currentGeneral = UnitType.ARCHER;
-            case BASE_TACTIC -> currentGeneral = UnitType.KNIGHT;
         }
         tacticUtility.setBotTactic(botTactic);
     }
@@ -107,14 +102,7 @@ public class ModClastMCPlaceExpMaxBot extends Bot {
             firstPlaceInGame = false;
         }
         int originDepth = 1;
-/*
-        if(tacticUtility.getCurrentPlayerType() == PlayerType.FIRST_PLAYER){
-            originDepth = 5 - enumerationPlayerUnits(PlayerType.FIRST_PLAYER, gameState.getCurrentBoard()).size();
-        }
-        else{
-            originDepth = 5 - enumerationPlayerUnits(PlayerType.SECOND_PLAYER, gameState.getCurrentBoard()).size();
-        }
-*/
+
         List<PlaceUnitEvent> possiblePlacesOrigin =  gameState.getPossiblePlaces();
         List<PlaceUnitEvent> possiblePlaces = new ArrayList<>();
         for(PlaceUnitEvent event :possiblePlacesOrigin){
@@ -135,11 +123,9 @@ public class ModClastMCPlaceExpMaxBot extends Bot {
                     continue;
                 }
             }
+
             possiblePlaces.add(event);
         }
-
-
-
 
         if (possiblePlaces.isEmpty()) {
             return new UtilityPlaceResult(Double.NEGATIVE_INFINITY, null);
@@ -153,7 +139,7 @@ public class ModClastMCPlaceExpMaxBot extends Bot {
                     protected UtilityPlaceResult compute() {
                         GameState gameStateNode = gameState.getCopy();
                         gameStateNode.makePlacement(placeRoot);
-                        double result = maximumPlaceAlg(gameStateNode, finalOriginDepth);
+                        double result = maximumPlaceAlg(gameStateNode, finalOriginDepth, placeRoot);
                         return new UtilityPlaceResult(result, placeRoot);
                     }
                 };
@@ -167,7 +153,7 @@ public class ModClastMCPlaceExpMaxBot extends Bot {
         }
     }
 
-    public double maximumPlaceAlg(GameState root, int depth) {
+    public double maximumPlaceAlg(GameState root, int depth, PlaceUnitEvent placeUnitEvent) {
         if(depth == 0){
             int generalMod = 1;
             if(tacticUtility.getCurrentPlayerType() == PlayerType.FIRST_PLAYER &&
@@ -177,7 +163,7 @@ public class ModClastMCPlaceExpMaxBot extends Bot {
                     root.getArmySecond().hasGeneral()) {
                 generalMod = (root.getArmySecond().getGeneralType() == currentGeneral) ? 10 : 1;
             }
-            return generalMod*tacticUtility.monteCarloAlg(root, 10);
+            return generalMod*tacticUtility.monteCarloAlg(root, 10, placeUnitEvent);
         }
         List<PlaceUnitEvent> possiblePlacesOrigin =  root.getPossiblePlaces();
         List<PlaceUnitEvent> placeRoot =  new ArrayList<>();
@@ -189,6 +175,7 @@ public class ModClastMCPlaceExpMaxBot extends Bot {
                     }
                 }
             }
+
             if((event.getRows() == 0 || event.getRows() == Board.ROWS-1)){
                 if(event.getUnit().getUnitType() == UnitType.KNIGHT){
                     continue;
@@ -211,7 +198,7 @@ public class ModClastMCPlaceExpMaxBot extends Bot {
                     root.getArmySecond().hasGeneral()) {
                 generalMod = (root.getArmySecond().getGeneralType() == currentGeneral) ? 10 : 1;
             }
-            return generalMod*tacticUtility.monteCarloAlg(root, 10);
+            return generalMod*tacticUtility.monteCarloAlg(root, 10, placeUnitEvent);
         } else {
             List<RecursiveTask<UtilityPlaceResult>> recursiveTasks = new ArrayList<>();
             for (PlaceUnitEvent placeEvent : placeRoot) {
@@ -221,7 +208,7 @@ public class ModClastMCPlaceExpMaxBot extends Bot {
                     protected UtilityPlaceResult compute() {
                         GameState gameStateNode = root.getCopy();
                         gameStateNode.makePlacement(placeEvent);
-                        return new UtilityPlaceResult(maximumPlaceAlg(gameStateNode, depth-1), placeEvent);
+                        return new UtilityPlaceResult(maximumPlaceAlg(gameStateNode, depth-1, placeUnitEvent), placeEvent);
                     }
                 };
                 recursiveTasks.add(task);
@@ -302,7 +289,7 @@ public class ModClastMCPlaceExpMaxBot extends Bot {
             points.add(features);
         }
         KMeans kMeans = new KMeans();
-        int numClusters = Math.min(4, movesRoot.size());  // количество кластеров можно варьировать
+        int numClusters = Math.min(5, movesRoot.size());  // количество кластеров можно варьировать
         List<KMeans.Cluster> clusters = kMeans.kMeansCluster(points, numClusters, 100);
 
         List<UtilityMoveResult> bestMoves = new ArrayList<>();
