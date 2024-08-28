@@ -1,5 +1,6 @@
 package io.deeplay.camp.botfarm.bots.denis_bots;
 
+import io.deeplay.camp.game.events.PlaceUnitEvent;
 import io.deeplay.camp.game.mechanics.GameState;
 import io.deeplay.camp.game.mechanics.PlayerType;
 
@@ -19,5 +20,5 @@ public interface UtilityFunction {
     void setBotTactic(BotTactic botTactic);
     void setCurrentPlayerType(PlayerType playerType);
     PlayerType getCurrentPlayerType();
-    double monteCarloAlg(GameState root, int countGame);
+    double monteCarloAlg(GameState root, int countGame, PlaceUnitEvent placeUnitEvent);
 }

@@ -103,10 +103,11 @@ public class TacticUtility implements UtilityFunction{
         double perFirst = ((double) firstHp / allHp) * 100;
         double perSecond = ((double) secondHp / allHp) * 100;
 
-        double valueFirst = (liveFirst * perFirst + liveGeneralFirst * 10) / ((liveSecond * 6 + liveGeneralSecond * 12) + 1);
-        double valueSecond = (liveSecond * perSecond + liveGeneralSecond * 10) / ((liveFirst * 6 + liveGeneralFirst * 12) + 1);
+        double valueFirst = (liveFirst * perFirst + liveGeneralFirst * gameState.getCountRound()) / ((Math.pow(liveSecond,2) + liveGeneralSecond * gameState.getCountRound()) + 1);
+        double valueSecond = (liveSecond * perSecond + liveGeneralSecond * gameState.getCountRound()) / ((Math.pow(liveFirst,2) + liveGeneralFirst * gameState.getCountRound()) + 1);
 
         double result;
+
         if (currentPlayerType == PlayerType.FIRST_PLAYER) {
             result = (valueFirst - valueSecond) / (valueFirst + valueSecond);
         } else {
@@ -115,6 +116,7 @@ public class TacticUtility implements UtilityFunction{
 
         return result;
     }
+
 
     @Override
     public double getPlaceUtility(GameState gameState) {
@@ -390,24 +392,28 @@ public class TacticUtility implements UtilityFunction{
         return resultProfit;
     }
 
-
-
     @SneakyThrows
-    public double monteCarloAlg(GameState root, int countGame){
-        int countWin = 0;
+    public double monteCarloAlg(GameState root, int countGame, PlaceUnitEvent placeUnit){
+        double countWin = 0;
         RandomBot bot1 = new RandomBot();
         RandomBot bot2 = new RandomBot();
         Game game;
+        int x = placeUnit.getColumns();
+        int y = placeUnit.getRows();
 
-        List<RecursiveTask<Integer>> recursiveTasks = new ArrayList<>();
+        List<RecursiveTask<Double>> recursiveTasks = new ArrayList<>();
         for (int numGame = 0; numGame < countGame; numGame++) {
             int finalNumGame = numGame;
-            RecursiveTask<Integer> task = new RecursiveTask<>() {
+            RecursiveTask<Double> task = new RecursiveTask<>() {
                 @SneakyThrows
                 @Override
-                protected Integer compute() {
+                protected Double compute() {
                     GameState gameStateNode = root.getCopy();
                     GameState gameState = gameStateNode;
+                    int countStrike = 0;
+                    int isAliveMod = 1;
+                    int modWinner = 0;
+
 
                     executePlace(gameState, finalNumGame, bot1, bot2);
                     gameState.changeCurrentPlayer();
@@ -418,28 +424,38 @@ public class TacticUtility implements UtilityFunction{
                         executeMove(gameState, finalNumGame, bot1, bot2);
                         gameState.makeChangePlayer(new ChangePlayerEvent(gameState.getCurrentPlayer()));
                         executeMove(gameState, finalNumGame, bot1, bot2);
+                        if(gameState.getCurrentBoard().getUnit(x,y).isHitTarget()){
+                            countStrike++;
+                        }
+                        if(!gameState.getCurrentBoard().getUnit(x,y).isAlive()){
+                            isAliveMod = 0;
+                        }
                         gameState.makeChangePlayer(new ChangePlayerEvent(gameState.getCurrentPlayer()));
                     }
-                    if(gameState.getWinner() == currentPlayerType){
-                        return 1;
+
+                    if(gameState.getWinner() == currentPlayerType) {
+                        modWinner = 1;
                     }
-                    return 0;
+
+
+                    //return (double) (countStrike*isAliveMod);
+                    return (double) modWinner;
+
                 }
             };
             recursiveTasks.add(task);
         }
 
-        List<Integer> results = ForkJoinTask.invokeAll(recursiveTasks).stream()
+        List<Double> results = ForkJoinTask.invokeAll(recursiveTasks).stream()
                 .map(ForkJoinTask::join)
                 .toList();
 
-        for (Integer task : results) {
+        for (Double task : results) {
             countWin+=task;
         }
 
-        return (double) countWin /countGame;
+        return (double) countWin / countGame;
     }
-
 
 
 
