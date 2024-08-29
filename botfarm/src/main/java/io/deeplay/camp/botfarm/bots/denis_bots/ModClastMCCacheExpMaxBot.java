@@ -14,6 +14,7 @@ import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -100,42 +101,67 @@ public class ModClastMCCacheExpMaxBot extends Bot {
 
     @SneakyThrows
     public PlaceUnitEvent getPlaceCacheResult(GameState gameState){
-        PlayerType forPlayerType = PlayerType.FIRST_PLAYER;
+        PlayerType forPlayerType = tacticUtility.getCurrentPlayerType();
         if(firstPlaceInGame) {
 
             bestBoard = null;
             gameStateCache = gameStateCache.loadCacheFromFile("hashStartGame.json");
             possibleStartStates = gameStateCache.getCache();
+            Collections.sort(possibleStartStates);
 
             if(tacticUtility.getCurrentPlayerType() == PlayerType.SECOND_PLAYER) {
                 for (PossibleStartState pos : possibleStartStates) {
                     if (pos.getForPlayerType() == tacticUtility.getCurrentPlayerType()) {
                         if (equalsBoard(pos.getEnemyUnits(), gameState.getCurrentBoard())) {
                             bestBoard = pos.allyUnits;
-                            forPlayerType = pos.forPlayerType;
+                            firstPlaceInGame = false;
                             break;
                         }
                     }
                 }
+
+                if(bestBoard == null){
+                    findNewTactic(gameState);
+                    List<PossibleStartState> possibleSecondPlayerStart = new ArrayList<>();
+                    for (PossibleStartState pos : possibleStartStates) {
+                        if (pos.getForPlayerType() == tacticUtility.getCurrentPlayerType() && pos.countWinRound < 5) {
+                            UnitType generalThisPos = null;
+                            for(int column = 0;column<Board.COLUMNS;column++){
+                                for(int row = Board.ROWS/2;row< Board.ROWS;row++){
+                                    if(pos.getAllyUnits().getUnit(column,row).isGeneral()){
+                                        generalThisPos = pos.getAllyUnits().getUnit(column,row).getUnitType();
+                                        break;
+                                    }
+                                }
+                            }
+                            if(generalThisPos == currentGeneral) {
+                                possibleSecondPlayerStart.add(pos);
+                            }
+                        }
+                        if(pos.countWinRound >= 5){
+                            break;
+                        }
+                    }
+                    bestBoard =  possibleSecondPlayerStart.get((int) (Math.random() * possibleSecondPlayerStart.size())).allyUnits;
+                    firstPlaceInGame = false;
+                }
+
             }
             else{
                 List<PossibleStartState> possibleFirstPlayerStart = new ArrayList<>();
                 for (PossibleStartState pos : possibleStartStates) {
-                    if (pos.getForPlayerType() == tacticUtility.getCurrentPlayerType()) {
+                    if (pos.getForPlayerType() == tacticUtility.getCurrentPlayerType() && pos.countWinRound < 4) {
                         possibleFirstPlayerStart.add(pos);
                     }
+                    if(pos.countWinRound >= 5){
+                        break;
+                    }
                 }
-                bestBoard = possibleFirstPlayerStart.get((int)(Math.random()*possibleFirstPlayerStart.size())).allyUnits;
+                bestBoard =  possibleFirstPlayerStart.get((int) (Math.random() * possibleFirstPlayerStart.size())).allyUnits;
                 firstPlaceInGame = false;
             }
+        }
 
-            if(bestBoard == null){
-               return getPlaceResult(gameState).place;
-            }
-        }
-        if (bestBoard == null){
-            return getPlaceResult(gameState).place;
-        }
         int shiftRow = 0;
         if(forPlayerType == PlayerType.FIRST_PLAYER) {
             shiftRow = 0;
@@ -358,7 +384,6 @@ public class ModClastMCCacheExpMaxBot extends Bot {
                     .map(ForkJoinTask::join)
                     .toList();
 
-            System.out.println("Ход сделан!");
             return getMaxMoveFromTasks(results);
         }
     }

@@ -36,25 +36,24 @@ public class GameStateCache implements Serializable {
             }
         }
         if(!cache.isEmpty()){
+            boolean flag = false;
             for(int i = 0; i < cache.size();i++){
                 if((playerType == cache.get(i).getForPlayerType())) {
                     if (equalsBoard(enemyBoard, cache.get(i).getEnemyUnits(), playerType)) {
                         if (countWinRound < cache.get(i).getCountWinRound()) {
                             cache.remove(cache.get(i));
                             cache.add(new PossibleStartState(enemyBoard, gameState.getBoard(), countWinRound, playerType));
-                            return;
+                            flag = true;
+                            break;
                         }
-                    } else {
-                        cache.add(new PossibleStartState(enemyBoard, gameState.getBoard(), countWinRound, playerType));
-                        return;
                     }
                 }
             }
-            cache.add(new PossibleStartState(enemyBoard, gameState.getBoard(), countWinRound, playerType));
+            if(!flag) {
+                cache.add(new PossibleStartState(enemyBoard, gameState.getBoard(), countWinRound, playerType));
+            }
         }
-        else{
-            cache.add(new PossibleStartState(enemyBoard, gameState.getBoard(), countWinRound, playerType));
-        }
+
     }
 
     private boolean equalsBoard(Board enemyBoard, Board allyBoard, PlayerType playerType){

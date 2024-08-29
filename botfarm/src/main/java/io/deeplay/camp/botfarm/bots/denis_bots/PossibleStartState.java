@@ -11,9 +11,14 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class PossibleStartState {
+public class PossibleStartState implements Comparable<PossibleStartState>{
     Board enemyUnits;
     Board allyUnits;
     int countWinRound;
     PlayerType forPlayerType;
+
+    @Override
+    public int compareTo(PossibleStartState o) {
+        return this.countWinRound - o.getCountWinRound();
+    }
 }

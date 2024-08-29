@@ -131,7 +131,7 @@ public class BotFight extends Thread{
             System.out.println("Завершение игры номер - " + gameCount);
         }
 
-        gameStateCache.saveCacheToFile("hashStartGame.json");
+        //gameStateCache.saveCacheToFile("hashStartGame.json");
         if (outInfoGame) {
             gameAnalisys.outputInfo();
         }
