@@ -1,6 +1,5 @@
 package io.deeplay.camp.server.player;
 
-import io.deeplay.camp.botfarm.bots.denis_bots.AiBot;
 import io.deeplay.camp.core.dto.client.game.ChangePlayerDto;
 import io.deeplay.camp.core.dto.client.game.MakeMoveDto;
 import io.deeplay.camp.core.dto.client.game.PlaceUnitDto;
