@@ -41,8 +41,9 @@ public class Main {
   }
 
   public static void BotFightFun() throws IOException {
-    ModClastExpMaxBot bot1 = new ModClastExpMaxBot(PlayerType.SECOND_PLAYER, 3);
-    ModClastMCCacheExpMaxBot bot2 = new ModClastMCCacheExpMaxBot(PlayerType.FIRST_PLAYER, 7);
+    ModClastMCCacheExpMaxBot bot1 = new ModClastMCCacheExpMaxBot(PlayerType.SECOND_PLAYER, 5);
+    ModClastExpMaxBot bot2 = new ModClastExpMaxBot(PlayerType.FIRST_PLAYER, 4);
+
     for(int i = 0; i<1;i++){
       BotFight fight = new BotFight(bot2, bot1, 100, true);
     }

@@ -14,197 +14,37 @@ import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
 
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 
-public class ModClastMCCacheExpMaxBot extends Bot {
+public class ModNewClastExpMaxBot extends Bot {
     private static final Logger logger = LoggerFactory.getLogger(RandomBot.class);
     BotTactic botTactic;
     UtilityFunction tacticUtility;
     UnitType currentGeneral;
     int maxDepth;
-    GameStateCache gameStateCache;
     @Setter boolean firstPlaceInGame = true;
-    List<PossibleStartState> possibleStartStates;
-    Board bestBoard;
     double eps = 0.001;
 
-    public ModClastMCCacheExpMaxBot(PlayerType playerType, int maxDepth){
+    public ModNewClastExpMaxBot(PlayerType playerType, int maxDepth){
         tacticUtility = new TacticUtility(BotTactic.BASE_TACTIC);
         tacticUtility.setCurrentPlayerType(playerType);
-        gameStateCache = new GameStateCache();
         this.maxDepth = maxDepth;
-    }
-
-    public void findNewTactic(GameState gameState){
-        if(gameState == null){
-            botTactic = BotTactic.KNIGHT_TACTIC;
-            currentGeneral = UnitType.KNIGHT;
-            return;
-        }
-        if(gameState.getCurrentPlayer() == PlayerType.FIRST_PLAYER){
-            int rand = (int)(Math.random()*5);
-            switch (rand){
-                case 0 -> {
-                    botTactic = BotTactic.KNIGHT_TACTIC;
-                }
-                case 1 -> {
-                    botTactic = BotTactic.HEALER_TACTIC;
-                }
-                case 2,3 -> {
-                    botTactic = BotTactic.MAGE_TACTIC;
-                }
-                case 4 -> {
-                    botTactic = BotTactic.ARCHER_TACTIC;
-                }
-                default -> botTactic = BotTactic.MAGE_TACTIC;
-            }
-        }
-        else if (gameState.getCurrentPlayer() == PlayerType.SECOND_PLAYER){
-            UnitType generalOpponent = null;
-            for(int column = 0; column < Board.COLUMNS;column++){
-                for(int row = 0; row < Board.ROWS/2;row++){
-                    if(gameState.getCurrentBoard().getUnit(column, row).isGeneral()){
-                        generalOpponent = gameState.getCurrentBoard().getUnit(column, row).getUnitType();
-                        break;
-                    }
-                }
-            }
-            if(generalOpponent == UnitType.KNIGHT){
-                botTactic = BotTactic.ARCHER_TACTIC;
-            } else if(generalOpponent == UnitType.HEALER){
-                botTactic = BotTactic.HEALER_TACTIC;
-            } else if (generalOpponent == UnitType.ARCHER) {
-                botTactic = BotTactic.ARCHER_TACTIC;
-            } else if (generalOpponent == UnitType.MAGE){
-                botTactic = BotTactic.KNIGHT_TACTIC;
-            }
-        }
-        switch (botTactic){
-            case MAGE_TACTIC -> currentGeneral = UnitType.MAGE;
-            case HEALER_TACTIC -> currentGeneral = UnitType.HEALER;
-            case KNIGHT_TACTIC, BASE_TACTIC -> currentGeneral = UnitType.KNIGHT;
-            case ARCHER_TACTIC -> currentGeneral = UnitType.ARCHER;
-        }
-        tacticUtility.setBotTactic(botTactic);
     }
 
 
     @Override
     public PlaceUnitEvent generatePlaceUnitEvent(GameState gameState) {
-        return getPlaceCacheResult(gameState);
-    }
-
-    @SneakyThrows
-    public PlaceUnitEvent getPlaceCacheResult(GameState gameState){
-        PlayerType forPlayerType = tacticUtility.getCurrentPlayerType();
-        if(firstPlaceInGame) {
-
-            bestBoard = null;
-            gameStateCache = gameStateCache.loadCacheFromFile("hashStartGame.json");
-            possibleStartStates = gameStateCache.getCache();
-            Collections.sort(possibleStartStates);
-
-            if(tacticUtility.getCurrentPlayerType() == PlayerType.SECOND_PLAYER) {
-                for (PossibleStartState pos : possibleStartStates) {
-                    if (pos.getForPlayerType() == tacticUtility.getCurrentPlayerType()) {
-                        if (equalsBoard(pos.getEnemyUnits(), gameState.getCurrentBoard())) {
-                            bestBoard = pos.allyUnits;
-                            firstPlaceInGame = false;
-                            break;
-                        }
-                    }
-                }
-
-                if(bestBoard == null){
-                    findNewTactic(gameState);
-                    List<PossibleStartState> possibleSecondPlayerStart = new ArrayList<>();
-                    for (PossibleStartState pos : possibleStartStates) {
-                        if (pos.getForPlayerType() == tacticUtility.getCurrentPlayerType() && pos.countWinRound < 5) {
-                            UnitType generalThisPos = null;
-                            for(int column = 0;column<Board.COLUMNS;column++){
-                                for(int row = Board.ROWS/2;row< Board.ROWS;row++){
-                                    if(pos.getAllyUnits().getUnit(column,row).isGeneral()){
-                                        generalThisPos = pos.getAllyUnits().getUnit(column,row).getUnitType();
-                                        break;
-                                    }
-                                }
-                            }
-                            if(generalThisPos == currentGeneral) {
-                                possibleSecondPlayerStart.add(pos);
-                            }
-                        }
-                        if(pos.countWinRound >= 5){
-                            break;
-                        }
-                    }
-                    bestBoard =  possibleSecondPlayerStart.get((int) (Math.random() * possibleSecondPlayerStart.size())).allyUnits;
-                    firstPlaceInGame = false;
-                }
-
-            }
-            else{
-                List<PossibleStartState> possibleFirstPlayerStart = new ArrayList<>();
-                for (PossibleStartState pos : possibleStartStates) {
-                    if (pos.getForPlayerType() == tacticUtility.getCurrentPlayerType() && pos.countWinRound < 4) {
-                        possibleFirstPlayerStart.add(pos);
-                    }
-                    if(pos.countWinRound >= 5){
-                        break;
-                    }
-                }
-                bestBoard =  possibleFirstPlayerStart.get((int) (Math.random() * possibleFirstPlayerStart.size())).allyUnits;
-                firstPlaceInGame = false;
-            }
-        }
-
-        int shiftRow = 0;
-        if(forPlayerType == PlayerType.FIRST_PLAYER) {
-            shiftRow = 0;
+        List<PlaceUnitEvent> placeUnitEvents = gameState.getPossiblePlaces();
+        if(!placeUnitEvents.isEmpty()){
+            return placeUnitEvents.get((int)(Math.random()*placeUnitEvents.size()));
         }
         else{
-            shiftRow = 2;
+            return null;
         }
-
-        for(int column = 0;column < Board.COLUMNS;column++){
-            for(int row = shiftRow;row < Board.ROWS/2 + shiftRow;row++){
-                if(gameState.getCurrentBoard().isEmptyCell(column,row)){
-                    if(enumerationPlayerUnits(tacticUtility.getCurrentPlayerType(), gameState.getCurrentBoard()).size() != 5){
-                        return new PlaceUnitEvent(column, row, bestBoard.getUnit(column,row), tacticUtility.getCurrentPlayerType(), true, bestBoard.getUnit(column,row).isGeneral());
-                    }
-                    else{
-                        return new PlaceUnitEvent(column, row, bestBoard.getUnit(column,row), tacticUtility.getCurrentPlayerType(), false, bestBoard.getUnit(column,row).isGeneral());
-                    }
-                }
-            }
-        }
-
-        return null;
-
-    }
-
-    private boolean equalsBoard(Board enemyBoard, Board allyBoard){
-        boolean result = true;
-        int shiftRow;
-        if(tacticUtility.getCurrentPlayerType() == PlayerType.FIRST_PLAYER) {
-            shiftRow = 2;
-        }
-        else{
-            shiftRow = 0;
-        }
-        for(int column = 0;column < Board.COLUMNS;column++) {
-            for (int row = shiftRow; row < Board.ROWS / 2 + shiftRow; row++) {
-                if((enemyBoard.getUnit(column,row).isGeneral() != allyBoard.getUnit(column,row).isGeneral()) ||
-                        (enemyBoard.getUnit(column,row).getUnitType() != allyBoard.getUnit(column,row).getUnitType())){
-                    result = false;
-                }
-            }
-        }
-        return result;
     }
 
     @Override
@@ -227,18 +67,29 @@ public class ModClastMCCacheExpMaxBot extends Bot {
                 points.add(features);
             }
             KMeans kMeans = new KMeans();
-            int numClusters = Math.min(5, movesRoot.size());  // количество кластеров можно варьировать
+            int numClusters = Math.min(3, movesRoot.size());  // количество кластеров можно варьировать
             List<KMeans.Cluster> clusters = kMeans.kMeansCluster(points, numClusters, 100);
 
 
             List<UtilityMoveResult> bestMoves = new ArrayList<>();
 
+
+
+            UtilityMoveResult bestResult = new UtilityMoveResult(Double.NEGATIVE_INFINITY, null);
+            KMeans.Cluster bestCluster = null;
             for (KMeans.Cluster cluster : clusters) {
                 UtilityMoveResult bestMoveInCluster = getBestMoveInCluster(points ,cluster, movesRoot, gameState, true);
                 if(bestMoveInCluster.event != null) {
-                    bestMoves.add(bestMoveInCluster);
+                    if(bestMoveInCluster.value > bestResult.value){
+                        bestCluster = cluster;
+                        bestResult = bestMoveInCluster;
+                    }
+                    //bestMoves.add(bestMoveInCluster);
                 }
             }
+            bestMoves = bestCluster.points;
+
+
 
             List<RecursiveTask<UtilityMoveResult>> recursiveTasks = new ArrayList<>();
             for (UtilityMoveResult moveBestClast : bestMoves) {
@@ -257,7 +108,7 @@ public class ModClastMCCacheExpMaxBot extends Bot {
                     .map(ForkJoinTask::join)
                     .toList();
 
-            return getMaxMoveFromTasks(results);
+            return getMaxFromTasks(results);
         }
     }
 
@@ -273,17 +124,28 @@ public class ModClastMCCacheExpMaxBot extends Bot {
             points.add(features);
         }
         KMeans kMeans = new KMeans();
-        int numClusters = Math.min(5, movesRoot.size());
+        int numClusters = Math.min(3, movesRoot.size());  // количество кластеров можно варьировать
         List<KMeans.Cluster> clusters = kMeans.kMeansCluster(points, numClusters, 100);
 
         List<UtilityMoveResult> bestMoves = new ArrayList<>();
 
+
+        UtilityMoveResult bestResult = new UtilityMoveResult(Double.NEGATIVE_INFINITY, null);
+        KMeans.Cluster bestCluster = null;
         for (KMeans.Cluster cluster : clusters) {
             UtilityMoveResult bestMoveInCluster = getBestMoveInCluster(points ,cluster, movesRoot, root, maxPlayer);
             if(bestMoveInCluster.event != null) {
-                bestMoves.add(bestMoveInCluster);
+                if(bestMoveInCluster.value > bestResult.value){
+                    bestCluster = cluster;
+                    bestResult = bestMoveInCluster;
+                    bestMoves = bestCluster.points;
+                }
+                //bestMoves.add(bestMoveInCluster);
             }
         }
+
+
+
 
         if(movesRoot.isEmpty()){
             if(root.getGameStage() == GameStage.ENDED){
@@ -313,7 +175,7 @@ public class ModClastMCCacheExpMaxBot extends Bot {
                     .map(ForkJoinTask::join)
                     .toList();
 
-            return maxPlayer ? getMaxMoveFromTasks(results).getValue() : getMinMoveFromTasks(results).getValue();
+            return maxPlayer ? getMaxFromTasks(results).getValue() : getMinFromTasks(results).getValue();
         }
     }
 
@@ -338,7 +200,7 @@ public class ModClastMCCacheExpMaxBot extends Bot {
         return new UtilityMoveResult(tacticUtility.getMoveUtility(gameStateNode), move);
     }
 
-    private UtilityMoveResult getMaxMoveFromTasks(List<UtilityMoveResult> results){
+    private UtilityMoveResult getMaxFromTasks(List<UtilityMoveResult> results){
         UtilityMoveResult bestValue = new UtilityMoveResult(Double.NEGATIVE_INFINITY, null);
         for (UtilityMoveResult task : results) {
             if (bestValue.value < task.value) {
@@ -349,7 +211,7 @@ public class ModClastMCCacheExpMaxBot extends Bot {
         return bestValue;
     }
 
-    private UtilityMoveResult getMinMoveFromTasks(List<UtilityMoveResult> results){
+    private UtilityMoveResult getMinFromTasks(List<UtilityMoveResult> results){
         UtilityMoveResult bestValue = new UtilityMoveResult(Double.POSITIVE_INFINITY, null);
         for (UtilityMoveResult task : results) {
             if (task.value < bestValue.value) {
@@ -388,6 +250,6 @@ public class ModClastMCCacheExpMaxBot extends Bot {
                 .map(ForkJoinTask::join)
                 .toList();
 
-        return maxPlayer ? getMaxMoveFromTasks(results) : getMinMoveFromTasks(results);
+        return maxPlayer ? getMaxFromTasks(results) : getMinFromTasks(results);
     }
 }

@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 
-public class ModClastMCCacheExpMaxBot extends Bot {
+public class ModNewClastMCCacheExpMaxBot extends Bot {
     private static final Logger logger = LoggerFactory.getLogger(RandomBot.class);
     BotTactic botTactic;
     UtilityFunction tacticUtility;
@@ -33,7 +33,7 @@ public class ModClastMCCacheExpMaxBot extends Bot {
     Board bestBoard;
     double eps = 0.001;
 
-    public ModClastMCCacheExpMaxBot(PlayerType playerType, int maxDepth){
+    public ModNewClastMCCacheExpMaxBot(PlayerType playerType, int maxDepth){
         tacticUtility = new TacticUtility(BotTactic.BASE_TACTIC);
         tacticUtility.setCurrentPlayerType(playerType);
         gameStateCache = new GameStateCache();
@@ -233,12 +233,20 @@ public class ModClastMCCacheExpMaxBot extends Bot {
 
             List<UtilityMoveResult> bestMoves = new ArrayList<>();
 
+            UtilityMoveResult bestResult = new UtilityMoveResult(Double.NEGATIVE_INFINITY, null);
+            KMeans.Cluster bestCluster = null;
             for (KMeans.Cluster cluster : clusters) {
                 UtilityMoveResult bestMoveInCluster = getBestMoveInCluster(points ,cluster, movesRoot, gameState, true);
                 if(bestMoveInCluster.event != null) {
-                    bestMoves.add(bestMoveInCluster);
+                    if(bestMoveInCluster.value > bestResult.value){
+                        bestCluster = cluster;
+                        bestResult = bestMoveInCluster;
+                    }
+                    //bestMoves.add(bestMoveInCluster);
                 }
             }
+            bestMoves = bestCluster.points;
+
 
             List<RecursiveTask<UtilityMoveResult>> recursiveTasks = new ArrayList<>();
             for (UtilityMoveResult moveBestClast : bestMoves) {
@@ -278,10 +286,17 @@ public class ModClastMCCacheExpMaxBot extends Bot {
 
         List<UtilityMoveResult> bestMoves = new ArrayList<>();
 
+        UtilityMoveResult bestResult = new UtilityMoveResult(Double.NEGATIVE_INFINITY, null);
+        KMeans.Cluster bestCluster = null;
         for (KMeans.Cluster cluster : clusters) {
             UtilityMoveResult bestMoveInCluster = getBestMoveInCluster(points ,cluster, movesRoot, root, maxPlayer);
             if(bestMoveInCluster.event != null) {
-                bestMoves.add(bestMoveInCluster);
+                if(bestMoveInCluster.value > bestResult.value){
+                    bestCluster = cluster;
+                    bestResult = bestMoveInCluster;
+                    bestMoves = bestCluster.points;
+                }
+                //bestMoves.add(bestMoveInCluster);
             }
         }
 
