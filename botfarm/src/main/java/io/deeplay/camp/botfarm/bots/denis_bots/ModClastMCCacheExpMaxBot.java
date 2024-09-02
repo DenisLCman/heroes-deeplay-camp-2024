@@ -153,7 +153,7 @@ public class ModClastMCCacheExpMaxBot extends Bot {
                     if (pos.getForPlayerType() == tacticUtility.getCurrentPlayerType() && pos.countWinRound < 4) {
                         possibleFirstPlayerStart.add(pos);
                     }
-                    if(pos.countWinRound >= 5){
+                    if(pos.countWinRound >= 4){
                         break;
                     }
                 }
