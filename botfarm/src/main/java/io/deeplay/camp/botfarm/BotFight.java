@@ -1,6 +1,7 @@
 package io.deeplay.camp.botfarm;
 
 import io.deeplay.camp.botfarm.bots.Bot;
+import io.deeplay.camp.botfarm.bots.denis_bots.GameStateCache;
 import io.deeplay.camp.game.Game;
 import io.deeplay.camp.game.entities.Board;
 import io.deeplay.camp.game.entities.Unit;
@@ -31,6 +32,7 @@ public class BotFight extends Thread{
     private final int timeSkeep = 0;
     Game game;
     GameAnalisys gameAnalisys;
+    GameStateCache gameStateCache;
     Bot botFirst;
     Bot botSecond;
     boolean consoleOut = true;
@@ -51,6 +53,7 @@ public class BotFight extends Thread{
         this.botFirst = botFirst;
         this.botSecond = botSecond;
         this.countGame = countGame;
+        gameStateCache = new GameStateCache();
         fightId = (int)(100000+Math.random()*999999);
         gameAnalisys = new GameAnalisys(countGame, fightId);
         this.outInfoGame = infoGame;
@@ -86,6 +89,12 @@ public class BotFight extends Thread{
     }
 
     public void playGames() throws GameException, InterruptedException, IOException {
+        try {
+            gameStateCache = gameStateCache.loadCacheFromFile("hashStartGame.json");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
         for (int gameCount = 0; gameCount < countGame; gameCount++) {
 
             game = new Game();
@@ -94,8 +103,10 @@ public class BotFight extends Thread{
             executePlace(game.getGameState(), gameCount);
             game.getGameState().changeCurrentPlayer();
             executePlace(game.getGameState(), gameCount);
-            game.getGameState().changeCurrentPlayer();
+            GameState gameStartState = game.getGameState().getCopy();
 
+
+            game.getGameState().changeCurrentPlayer();
 
 /*
             game.getGameState().setDefaultPlacement();
@@ -111,10 +122,16 @@ public class BotFight extends Thread{
             }
 
             gameAnalisys.reviewGame(game.getGameState(), gameCount);
+
+            if(game.getGameState().getWinner() != PlayerType.DRAW) {
+                gameStateCache.addCache(gameStartState, 10 - game.getGameState().getCountRound(), game.getGameState().getWinner());
+            }
+
             game = null;
             System.out.println("Завершение игры номер - " + gameCount);
         }
 
+        //gameStateCache.saveCacheToFile("hashStartGame.json");
         if (outInfoGame) {
             gameAnalisys.outputInfo();
         }

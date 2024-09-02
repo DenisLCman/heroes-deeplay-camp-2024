@@ -27,7 +27,7 @@ public class ModClastMCPlaceExpMaxBot extends Bot {
     UnitType currentGeneral;
     int maxDepth;
     @Setter boolean firstPlaceInGame = true;
-    double eps = 0.01;
+    double eps = 0.001;
     int counter = 0;
 
     public ModClastMCPlaceExpMaxBot(PlayerType playerType, int maxDepth){
@@ -155,15 +155,7 @@ public class ModClastMCPlaceExpMaxBot extends Bot {
 
     public double maximumPlaceAlg(GameState root, int depth, PlaceUnitEvent placeUnitEvent) {
         if(depth == 0){
-            int generalMod = 1;
-            if(tacticUtility.getCurrentPlayerType() == PlayerType.FIRST_PLAYER &&
-                    root.getArmyFirst().hasGeneral()){
-                generalMod = (root.getArmyFirst().getGeneralType() == currentGeneral) ? 10 : 1;
-            } else if (tacticUtility.getCurrentPlayerType() == PlayerType.SECOND_PLAYER &&
-                    root.getArmySecond().hasGeneral()) {
-                generalMod = (root.getArmySecond().getGeneralType() == currentGeneral) ? 10 : 1;
-            }
-            return generalMod*tacticUtility.monteCarloAlg(root, 10, placeUnitEvent);
+            return tacticUtility.monteCarloAlg(root, 10, placeUnitEvent);
         }
         List<PlaceUnitEvent> possiblePlacesOrigin =  root.getPossiblePlaces();
         List<PlaceUnitEvent> placeRoot =  new ArrayList<>();
@@ -190,15 +182,7 @@ public class ModClastMCPlaceExpMaxBot extends Bot {
         }
 
         if(placeRoot.isEmpty()){
-            int generalMod = 1;
-            if(tacticUtility.getCurrentPlayerType() == PlayerType.FIRST_PLAYER &&
-                    root.getArmyFirst().hasGeneral()){
-                generalMod = (root.getArmyFirst().getGeneralType() == currentGeneral) ? 10 : 1;
-            } else if (tacticUtility.getCurrentPlayerType() == PlayerType.SECOND_PLAYER &&
-                    root.getArmySecond().hasGeneral()) {
-                generalMod = (root.getArmySecond().getGeneralType() == currentGeneral) ? 10 : 1;
-            }
-            return generalMod*tacticUtility.monteCarloAlg(root, 10, placeUnitEvent);
+            return tacticUtility.monteCarloAlg(root, 10, placeUnitEvent);
         } else {
             List<RecursiveTask<UtilityPlaceResult>> recursiveTasks = new ArrayList<>();
             for (PlaceUnitEvent placeEvent : placeRoot) {

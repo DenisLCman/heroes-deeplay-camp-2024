@@ -1,7 +1,6 @@
 package io.deeplay.camp.game.entities;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.*;
 import io.deeplay.camp.game.mechanics.PlayerType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,12 +22,12 @@ public abstract class Unit implements GeneralBuff {
   @Getter protected int damage;
   @Getter protected int accuracy;
   @Getter protected int armor;
-  protected boolean isGeneral;
+  @JsonProperty("general") protected boolean isGeneral;
   @Getter protected UnitType unitType;
   @Setter @Getter protected PlayerType playerType;
   @Getter protected AttackType attackType;
   // Поле для проверки, походил ли данный юнит в этом ходу или нет
-  @Getter protected boolean isMoved = false;
+  @JsonProperty("moved") @Getter protected boolean isMoved = false;
   @Getter boolean hitTarget = false;
 
   public Unit(
@@ -101,11 +100,12 @@ public abstract class Unit implements GeneralBuff {
     this.hitTarget = hitTarget;
   }
 
+  @JsonIgnore
   public boolean isAlive() {
     return currentHp > 0;
   }
 
-  public boolean isGeneral() {
+  public boolean isGeneral(){
     return isGeneral;
   }
 

@@ -30,7 +30,7 @@ public class ModClastExpMaxBot extends Bot {
     UnitType currentGeneral;
     int maxDepth;
     @Setter boolean firstPlaceInGame = true;
-    double eps = 0.01;
+    double eps = 0.001;
 
     public ModClastExpMaxBot(PlayerType playerType, int maxDepth){
         tacticUtility = new TacticUtility(BotTactic.BASE_TACTIC);
