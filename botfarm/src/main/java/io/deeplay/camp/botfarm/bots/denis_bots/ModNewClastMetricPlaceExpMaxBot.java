@@ -21,22 +21,19 @@ import java.util.ArrayList;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 
-public class ModNewClastMCCacheExpMaxBot extends Bot {
+public class ModNewClastMetricPlaceExpMaxBot extends Bot {
     private static final Logger logger = LoggerFactory.getLogger(RandomBot.class);
     BotTactic botTactic;
     UtilityFunction tacticUtility;
     UnitType currentGeneral;
     int maxDepth;
-    GameStateCache gameStateCache;
     @Setter boolean firstPlaceInGame = true;
-    List<PossibleStartState> possibleStartStates;
     Board bestBoard;
     double eps = 0.001;
 
-    public ModNewClastMCCacheExpMaxBot(PlayerType playerType, int maxDepth){
-        tacticUtility = new TacticUtility(BotTactic.BASE_TACTIC);
+    public ModNewClastMetricPlaceExpMaxBot(PlayerType playerType, int maxDepth){
+        tacticUtility = new TacticUtility(BotTactic.KNIGHT_TACTIC);
         tacticUtility.setCurrentPlayerType(playerType);
-        gameStateCache = new GameStateCache();
         this.maxDepth = maxDepth;
     }
 
@@ -77,9 +74,9 @@ public class ModNewClastMCCacheExpMaxBot extends Bot {
             if(generalOpponent == UnitType.KNIGHT){
                 botTactic = BotTactic.ARCHER_TACTIC;
             } else if(generalOpponent == UnitType.HEALER){
-                botTactic = BotTactic.HEALER_TACTIC;
+                botTactic = BotTactic.KNIGHT_TACTIC;
             } else if (generalOpponent == UnitType.ARCHER) {
-                botTactic = BotTactic.ARCHER_TACTIC;
+                botTactic = BotTactic.HEALER_TACTIC;
             } else if (generalOpponent == UnitType.MAGE){
                 botTactic = BotTactic.KNIGHT_TACTIC;
             }
@@ -93,77 +90,28 @@ public class ModNewClastMCCacheExpMaxBot extends Bot {
         tacticUtility.setBotTactic(botTactic);
     }
 
-
     @Override
     public PlaceUnitEvent generatePlaceUnitEvent(GameState gameState) {
-        return getPlaceCacheResult(gameState);
+
+        return getPlaceResult(gameState);
     }
 
-    @SneakyThrows
-    public PlaceUnitEvent getPlaceCacheResult(GameState gameState){
-        PlayerType forPlayerType = tacticUtility.getCurrentPlayerType();
+    public PlaceUnitEvent getPlaceResult(GameState gameState){
         if(firstPlaceInGame) {
-
-            bestBoard = null;
-            gameStateCache = gameStateCache.loadCacheFromFile("hashStartGame.json");
-            possibleStartStates = gameStateCache.getCache();
-            Collections.sort(possibleStartStates);
-
-            if(tacticUtility.getCurrentPlayerType() == PlayerType.SECOND_PLAYER) {
-                for (PossibleStartState pos : possibleStartStates) {
-                    if (pos.getForPlayerType() == tacticUtility.getCurrentPlayerType()) {
-                        if (equalsBoard(pos.getEnemyUnits(), gameState.getCurrentBoard())) {
-                            bestBoard = pos.allyUnits;
-                            firstPlaceInGame = false;
-                            break;
-                        }
-                    }
-                }
-
-                if(bestBoard == null){
-                    findNewTactic(gameState);
-                    List<PossibleStartState> possibleSecondPlayerStart = new ArrayList<>();
-                    for (PossibleStartState pos : possibleStartStates) {
-                        if (pos.getForPlayerType() == tacticUtility.getCurrentPlayerType() && pos.countWinRound < 5) {
-                            UnitType generalThisPos = null;
-                            for(int column = 0;column<Board.COLUMNS;column++){
-                                for(int row = Board.ROWS/2;row< Board.ROWS;row++){
-                                    if(pos.getAllyUnits().getUnit(column,row).isGeneral()){
-                                        generalThisPos = pos.getAllyUnits().getUnit(column,row).getUnitType();
-                                        break;
-                                    }
-                                }
-                            }
-                            if(generalThisPos == currentGeneral) {
-                                possibleSecondPlayerStart.add(pos);
-                            }
-                        }
-                        if(pos.countWinRound >= 5){
-                            break;
-                        }
-                    }
-                    bestBoard =  possibleSecondPlayerStart.get((int) (Math.random() * possibleSecondPlayerStart.size())).allyUnits;
-                    firstPlaceInGame = false;
-                }
-
-            }
-            else{
-                List<PossibleStartState> possibleFirstPlayerStart = new ArrayList<>();
-                for (PossibleStartState pos : possibleStartStates) {
-                    if (pos.getForPlayerType() == tacticUtility.getCurrentPlayerType() && pos.countWinRound < 4) {
-                        possibleFirstPlayerStart.add(pos);
-                    }
-                    if(pos.countWinRound >= 5){
-                        break;
-                    }
-                }
-                bestBoard =  possibleFirstPlayerStart.get((int) (Math.random() * possibleFirstPlayerStart.size())).allyUnits;
-                firstPlaceInGame = false;
-            }
+            bestBoard = new Board();
+            findNewTactic(gameState);
+            tacticUtility.setBotTactic(botTactic);
+            firstPlaceInGame = false;
         }
 
+        switch (currentGeneral){
+            case KNIGHT -> autoFillBoard(UnitType.KNIGHT);
+            case MAGE -> autoFillBoard(UnitType.MAGE);
+            case ARCHER -> autoFillBoard(UnitType.ARCHER);
+            case HEALER -> autoFillBoard(UnitType.HEALER);
+        }
         int shiftRow = 0;
-        if(forPlayerType == PlayerType.FIRST_PLAYER) {
+        if(tacticUtility.getCurrentPlayerType() == PlayerType.FIRST_PLAYER) {
             shiftRow = 0;
         }
         else{
@@ -187,24 +135,86 @@ public class ModNewClastMCCacheExpMaxBot extends Bot {
 
     }
 
-    private boolean equalsBoard(Board enemyBoard, Board allyBoard){
-        boolean result = true;
-        int shiftRow;
-        if(tacticUtility.getCurrentPlayerType() == PlayerType.FIRST_PLAYER) {
-            shiftRow = 2;
-        }
-        else{
-            shiftRow = 0;
-        }
-        for(int column = 0;column < Board.COLUMNS;column++) {
-            for (int row = shiftRow; row < Board.ROWS / 2 + shiftRow; row++) {
-                if((enemyBoard.getUnit(column,row).isGeneral() != allyBoard.getUnit(column,row).isGeneral()) ||
-                        (enemyBoard.getUnit(column,row).getUnitType() != allyBoard.getUnit(column,row).getUnitType())){
-                    result = false;
-                }
+    private void autoFillBoard(UnitType unitType){
+        int shiftRow = 0;
+        PlayerType playerTypeThis = tacticUtility.getCurrentPlayerType();
+        if(playerTypeThis == PlayerType.FIRST_PLAYER){
+            if(unitType == UnitType.KNIGHT){
+                bestBoard.setUnit(0,0, new Archer(playerTypeThis));
+                bestBoard.setUnit(0,1, new Archer(playerTypeThis));
+                bestBoard.setUnit(1,0, new Healer(playerTypeThis));
+                bestBoard.setUnit(1,1, new Knight(playerTypeThis));
+                bestBoard.setUnit(2,0, new Archer(playerTypeThis));
+                bestBoard.setUnit(2,1, new Archer(playerTypeThis));
+                bestBoard.getUnit(1,1).setGeneral(true);
+            }
+            if(unitType == UnitType.MAGE){
+                bestBoard.setUnit(0,0, new Archer(playerTypeThis));
+                bestBoard.setUnit(0,1, new Archer(playerTypeThis));
+                bestBoard.setUnit(1,0, new Mage(playerTypeThis));
+                bestBoard.setUnit(1,1, new Healer(playerTypeThis));
+                bestBoard.setUnit(2,0, new Mage(playerTypeThis));
+                bestBoard.setUnit(2,1, new Archer(playerTypeThis));
+                bestBoard.getUnit(1,0).setGeneral(true);
+            }
+            if(unitType == UnitType.ARCHER){
+                bestBoard.setUnit(0,0, new Archer(playerTypeThis));
+                bestBoard.setUnit(0,1, new Mage(playerTypeThis));
+                bestBoard.setUnit(1,0, new Mage(playerTypeThis));
+                bestBoard.setUnit(1,1, new Healer(playerTypeThis));
+                bestBoard.setUnit(2,0, new Archer(playerTypeThis));
+                bestBoard.setUnit(2,1, new Mage(playerTypeThis));
+                bestBoard.getUnit(2,0).setGeneral(true);
+            }
+            if(unitType == UnitType.HEALER){
+                bestBoard.setUnit(0,0, new Archer(playerTypeThis));
+                bestBoard.setUnit(0,1, new Archer(playerTypeThis));
+                bestBoard.setUnit(1,0, new Healer(playerTypeThis));
+                bestBoard.setUnit(1,1, new Knight(playerTypeThis));
+                bestBoard.setUnit(2,0, new Archer(playerTypeThis));
+                bestBoard.setUnit(2,1, new Archer(playerTypeThis));
+                bestBoard.getUnit(1,0).setGeneral(true);
             }
         }
-        return result;
+        else{
+            if(unitType == UnitType.KNIGHT){
+                bestBoard.setUnit(0,2, new Archer(playerTypeThis));
+                bestBoard.setUnit(0,3, new Archer(playerTypeThis));
+                bestBoard.setUnit(1,2, new Knight(playerTypeThis));
+                bestBoard.setUnit(1,3, new Healer(playerTypeThis));
+                bestBoard.setUnit(2,2, new Archer(playerTypeThis));
+                bestBoard.setUnit(2,3, new Archer(playerTypeThis));
+                bestBoard.getUnit(1,2).setGeneral(true);
+            }
+            if(unitType == UnitType.MAGE){
+                bestBoard.setUnit(0,2, new Archer(playerTypeThis));
+                bestBoard.setUnit(0,3, new Archer(playerTypeThis));
+                bestBoard.setUnit(1,2, new Knight(playerTypeThis));
+                bestBoard.setUnit(1,3, new Healer(playerTypeThis));
+                bestBoard.setUnit(2,2, new Mage(playerTypeThis));
+                bestBoard.setUnit(2,3, new Archer(playerTypeThis));
+                bestBoard.getUnit(2,2).setGeneral(true);
+            }
+            if(unitType == UnitType.ARCHER){
+                bestBoard.setUnit(0,2, new Healer(playerTypeThis));
+                bestBoard.setUnit(0,3, new Archer(playerTypeThis));
+                bestBoard.setUnit(1,2, new Knight(playerTypeThis));
+                bestBoard.setUnit(1,3, new Archer(playerTypeThis));
+                bestBoard.setUnit(2,2, new Healer(playerTypeThis));
+                bestBoard.setUnit(2,3, new Archer(playerTypeThis));
+                bestBoard.getUnit(2,3).setGeneral(true);
+            }
+            if(unitType == UnitType.HEALER){
+                bestBoard.setUnit(0,2, new Knight(playerTypeThis));
+                bestBoard.setUnit(0,3, new Healer(playerTypeThis));
+                bestBoard.setUnit(1,2, new Knight(playerTypeThis));
+                bestBoard.setUnit(1,3, new Archer(playerTypeThis));
+                bestBoard.setUnit(2,2, new Healer(playerTypeThis));
+                bestBoard.setUnit(2,3, new Archer(playerTypeThis));
+                bestBoard.getUnit(0,3).setGeneral(true);
+            }
+        }
+
     }
 
     @Override
@@ -217,6 +227,14 @@ public class ModNewClastMCCacheExpMaxBot extends Bot {
     private UtilityMoveResult getMoveResult(GameState gameState) {
         int originDepth = maxDepth;
         List<MakeMoveEvent> movesRoot = gameState.getPossibleMoves();
+        PlayerType playerType = tacticUtility.getCurrentPlayerType();
+        if(enumerationMovedUnits(playerType, gameState) < enumerationTypeUnits(playerType, gameState, UnitType.HEALER)){
+            movesRoot = cleanerByAttacker(UnitType.HEALER, movesRoot);
+        } else if(enumerationMovedUnits(playerType, gameState) < enumerationTypeUnits(playerType, gameState, UnitType.KNIGHT)){
+            movesRoot = cleanerByAttacker(UnitType.KNIGHT, movesRoot);
+        } else if(enumerationMovedUnits(playerType, gameState) < enumerationTypeUnits(playerType, gameState, UnitType.ARCHER)){
+            movesRoot = cleanerByAttacker(UnitType.ARCHER, movesRoot);
+        }
 
         if (movesRoot.isEmpty()) {
             return new UtilityMoveResult(Double.NEGATIVE_INFINITY, null);
@@ -226,12 +244,12 @@ public class ModNewClastMCCacheExpMaxBot extends Bot {
                 UtilityMoveResult features = extractValue(gameState, move);
                 points.add(features);
             }
+
             KMeans kMeans = new KMeans();
             int numClusters = Math.min(5, movesRoot.size());  // количество кластеров можно варьировать
             List<KMeans.Cluster> clusters = kMeans.kMeansCluster(points, numClusters, 100);
 
-
-            List<UtilityMoveResult> bestMoves = new ArrayList<>();
+            List<UtilityMoveResult> bestMoves;
 
             UtilityMoveResult bestResult = new UtilityMoveResult(Double.NEGATIVE_INFINITY, null);
             KMeans.Cluster bestCluster = null;
@@ -246,6 +264,8 @@ public class ModNewClastMCCacheExpMaxBot extends Bot {
                 }
             }
             bestMoves = bestCluster.points;
+            bestMoves.sort(Collections.reverseOrder());
+
 
 
             List<RecursiveTask<UtilityMoveResult>> recursiveTasks = new ArrayList<>();
@@ -265,6 +285,7 @@ public class ModNewClastMCCacheExpMaxBot extends Bot {
                     .map(ForkJoinTask::join)
                     .toList();
 
+            System.out.println("Ход сделан!");
             return getMaxMoveFromTasks(results);
         }
     }
@@ -274,14 +295,24 @@ public class ModNewClastMCCacheExpMaxBot extends Bot {
             return tacticUtility.getMoveUtility(root);
         }
         List<MakeMoveEvent> movesRoot = root.getPossibleMoves();
+        PlayerType playerType = tacticUtility.getCurrentPlayerType();
+        if(enumerationMovedUnits(playerType, root) < enumerationTypeUnits(playerType, root, UnitType.HEALER)){
+            movesRoot = cleanerByAttacker(UnitType.HEALER, movesRoot);
+        } else if(enumerationMovedUnits(playerType, root) < enumerationTypeUnits(playerType, root, UnitType.KNIGHT)){
+            movesRoot = cleanerByAttacker(UnitType.KNIGHT, movesRoot);
+        } else if(enumerationMovedUnits(playerType, root) < enumerationTypeUnits(playerType, root, UnitType.ARCHER)){
+            movesRoot = cleanerByAttacker(UnitType.ARCHER, movesRoot);
+        }
 
         List<UtilityMoveResult> points = new ArrayList<>();
         for (MakeMoveEvent move : movesRoot) {
             UtilityMoveResult features = extractValue(root, move);
             points.add(features);
         }
+
+
         KMeans kMeans = new KMeans();
-        int numClusters = Math.min(5, movesRoot.size());
+        int numClusters = Math.min(5, movesRoot.size());  // количество кластеров можно варьировать
         List<KMeans.Cluster> clusters = kMeans.kMeansCluster(points, numClusters, 100);
 
         List<UtilityMoveResult> bestMoves = new ArrayList<>();
@@ -298,6 +329,8 @@ public class ModNewClastMCCacheExpMaxBot extends Bot {
                 }
             }
         }
+        bestMoves.sort(Collections.reverseOrder());
+
 
         if(movesRoot.isEmpty()){
             if(root.getGameStage() == GameStage.ENDED){
@@ -382,6 +415,65 @@ public class ModNewClastMCCacheExpMaxBot extends Bot {
         }
         return unitPositions;
     }
+
+    public Integer enumerationMovedUnits(PlayerType playerType, GameState gameState) {
+        int countMovedUnits = 0;
+        if (playerType == PlayerType.FIRST_PLAYER) {
+            for(int column = 0; column<Board.COLUMNS;column++){
+                for(int row = 0; row< Board.ROWS/2;row++){
+                    if(gameState.getCurrentBoard().getUnit(column,row).isMoved() &&
+                            gameState.getCurrentBoard().getUnit(column,row).isAlive()){
+                        countMovedUnits++;
+                    }
+                }
+            }
+        } else {
+            for(int column = 0; column<Board.COLUMNS;column++){
+                for(int row = Board.ROWS/2; row< Board.ROWS;row++){
+                    if(gameState.getCurrentBoard().getUnit(column,row).isMoved() &&
+                            gameState.getCurrentBoard().getUnit(column,row).isAlive()){
+                        countMovedUnits++;
+                    }
+                }
+            }
+        }
+        return countMovedUnits;
+    }
+
+    public Integer enumerationTypeUnits(PlayerType playerType, GameState gameState, UnitType unitType) {
+        int countTypeUnits = 0;
+        if (playerType == PlayerType.FIRST_PLAYER) {
+            for(int column = 0; column<Board.COLUMNS;column++){
+                for(int row = 0; row< Board.ROWS/2;row++){
+                    if(gameState.getCurrentBoard().getUnit(column,row).getUnitType() == unitType &&
+                            gameState.getCurrentBoard().getUnit(column,row).isAlive()){
+                        countTypeUnits++;
+                    }
+                }
+            }
+        } else {
+            for(int column = 0; column<Board.COLUMNS;column++){
+                for(int row = Board.ROWS/2; row< Board.ROWS;row++){
+                    if(gameState.getCurrentBoard().getUnit(column,row).getUnitType() == unitType &&
+                            gameState.getCurrentBoard().getUnit(column,row).isAlive()){
+                        countTypeUnits++;
+                    }
+                }
+            }
+        }
+        return countTypeUnits;
+    }
+
+    public List<MakeMoveEvent> cleanerByAttacker(UnitType unitType, List<MakeMoveEvent> movesRoot) {
+        List<MakeMoveEvent> tmpList = new ArrayList<>();
+        for(MakeMoveEvent moveEvent : movesRoot){
+            if(moveEvent.getAttacker().getUnitType() == unitType){
+                tmpList.add(moveEvent);
+            }
+        }
+        return tmpList;
+    }
+
     @SneakyThrows
     private UtilityMoveResult getBestMoveInCluster(List<UtilityMoveResult> points, KMeans.Cluster cluster, List<MakeMoveEvent> movesRoot, GameState gameState, boolean maxPlayer) {
         List<RecursiveTask<UtilityMoveResult>> tasks = new ArrayList<>();

@@ -41,11 +41,11 @@ public class Main {
   }
 
   public static void BotFightFun() throws IOException {
-    ModClastExpMaxBot bot1 = new ModClastExpMaxBot(PlayerType.SECOND_PLAYER, 4);
-    ModClastMCCacheExpMaxBot bot2 = new ModClastMCCacheExpMaxBot(PlayerType.FIRST_PLAYER, 8);
+    ModClastMCCacheExpMaxBot bot1 = new ModClastMCCacheExpMaxBot(PlayerType.FIRST_PLAYER, 4);
+    ModNewClastMetricPlaceExpMaxBot bot2 = new ModNewClastMetricPlaceExpMaxBot(PlayerType.SECOND_PLAYER, 4);
 
     for(int i = 0; i<1;i++){
-      BotFight fight = new BotFight(bot2, bot1, 100, true);
+      BotFight fight = new BotFight(bot1, bot2, 100, true);
     }
   }
 

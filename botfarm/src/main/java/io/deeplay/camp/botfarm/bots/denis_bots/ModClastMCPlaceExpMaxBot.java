@@ -28,7 +28,6 @@ public class ModClastMCPlaceExpMaxBot extends Bot {
     int maxDepth;
     @Setter boolean firstPlaceInGame = true;
     double eps = 0.001;
-    int counter = 0;
 
     public ModClastMCPlaceExpMaxBot(PlayerType playerType, int maxDepth){
         tacticUtility = new TacticUtility(BotTactic.KNIGHT_TACTIC);
