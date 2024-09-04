@@ -1,10 +1,12 @@
 package io.deeplay.camp.botfarm.bots.denis_bots;
 
 import io.deeplay.camp.botfarm.bots.Bot;
+import io.deeplay.camp.game.events.MakeMoveEvent;
 import io.deeplay.camp.game.events.PlaceUnitEvent;
 import io.deeplay.camp.game.mechanics.GameState;
 import io.deeplay.camp.game.mechanics.PlayerType;
 
+import java.util.List;
 import java.util.Random;
 
 public class RandomUtility implements UtilityFunction{
@@ -45,6 +47,11 @@ public class RandomUtility implements UtilityFunction{
     @Override
     public double monteCarloAlg(GameState root, int countGame, PlaceUnitEvent event) {
         return 0;
+    }
+
+    @Override
+    public List<MakeMoveEvent> changeMoveByTactic(GameState gameState, List<MakeMoveEvent> listEvents) {
+        return List.of();
     }
 
 }

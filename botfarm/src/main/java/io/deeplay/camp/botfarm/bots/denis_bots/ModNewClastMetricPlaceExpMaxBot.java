@@ -227,14 +227,7 @@ public class ModNewClastMetricPlaceExpMaxBot extends Bot {
     private UtilityMoveResult getMoveResult(GameState gameState) {
         int originDepth = maxDepth;
         List<MakeMoveEvent> movesRoot = gameState.getPossibleMoves();
-        PlayerType playerType = tacticUtility.getCurrentPlayerType();
-        if(enumerationMovedUnits(playerType, gameState) < enumerationTypeUnits(playerType, gameState, UnitType.HEALER)){
-            movesRoot = cleanerByAttacker(UnitType.HEALER, movesRoot);
-        } else if(enumerationMovedUnits(playerType, gameState) < enumerationTypeUnits(playerType, gameState, UnitType.KNIGHT)){
-            movesRoot = cleanerByAttacker(UnitType.KNIGHT, movesRoot);
-        } else if(enumerationMovedUnits(playerType, gameState) < enumerationTypeUnits(playerType, gameState, UnitType.ARCHER)){
-            movesRoot = cleanerByAttacker(UnitType.ARCHER, movesRoot);
-        }
+        movesRoot = tacticUtility.changeMoveByTactic(gameState, movesRoot);
 
         if (movesRoot.isEmpty()) {
             return new UtilityMoveResult(Double.NEGATIVE_INFINITY, null);
@@ -295,14 +288,7 @@ public class ModNewClastMetricPlaceExpMaxBot extends Bot {
             return tacticUtility.getMoveUtility(root);
         }
         List<MakeMoveEvent> movesRoot = root.getPossibleMoves();
-        PlayerType playerType = tacticUtility.getCurrentPlayerType();
-        if(enumerationMovedUnits(playerType, root) < enumerationTypeUnits(playerType, root, UnitType.HEALER)){
-            movesRoot = cleanerByAttacker(UnitType.HEALER, movesRoot);
-        } else if(enumerationMovedUnits(playerType, root) < enumerationTypeUnits(playerType, root, UnitType.KNIGHT)){
-            movesRoot = cleanerByAttacker(UnitType.KNIGHT, movesRoot);
-        } else if(enumerationMovedUnits(playerType, root) < enumerationTypeUnits(playerType, root, UnitType.ARCHER)){
-            movesRoot = cleanerByAttacker(UnitType.ARCHER, movesRoot);
-        }
+        movesRoot = tacticUtility.changeMoveByTactic(root, movesRoot);
 
         List<UtilityMoveResult> points = new ArrayList<>();
         for (MakeMoveEvent move : movesRoot) {
@@ -415,65 +401,6 @@ public class ModNewClastMetricPlaceExpMaxBot extends Bot {
         }
         return unitPositions;
     }
-
-    public Integer enumerationMovedUnits(PlayerType playerType, GameState gameState) {
-        int countMovedUnits = 0;
-        if (playerType == PlayerType.FIRST_PLAYER) {
-            for(int column = 0; column<Board.COLUMNS;column++){
-                for(int row = 0; row< Board.ROWS/2;row++){
-                    if(gameState.getCurrentBoard().getUnit(column,row).isMoved() &&
-                            gameState.getCurrentBoard().getUnit(column,row).isAlive()){
-                        countMovedUnits++;
-                    }
-                }
-            }
-        } else {
-            for(int column = 0; column<Board.COLUMNS;column++){
-                for(int row = Board.ROWS/2; row< Board.ROWS;row++){
-                    if(gameState.getCurrentBoard().getUnit(column,row).isMoved() &&
-                            gameState.getCurrentBoard().getUnit(column,row).isAlive()){
-                        countMovedUnits++;
-                    }
-                }
-            }
-        }
-        return countMovedUnits;
-    }
-
-    public Integer enumerationTypeUnits(PlayerType playerType, GameState gameState, UnitType unitType) {
-        int countTypeUnits = 0;
-        if (playerType == PlayerType.FIRST_PLAYER) {
-            for(int column = 0; column<Board.COLUMNS;column++){
-                for(int row = 0; row< Board.ROWS/2;row++){
-                    if(gameState.getCurrentBoard().getUnit(column,row).getUnitType() == unitType &&
-                            gameState.getCurrentBoard().getUnit(column,row).isAlive()){
-                        countTypeUnits++;
-                    }
-                }
-            }
-        } else {
-            for(int column = 0; column<Board.COLUMNS;column++){
-                for(int row = Board.ROWS/2; row< Board.ROWS;row++){
-                    if(gameState.getCurrentBoard().getUnit(column,row).getUnitType() == unitType &&
-                            gameState.getCurrentBoard().getUnit(column,row).isAlive()){
-                        countTypeUnits++;
-                    }
-                }
-            }
-        }
-        return countTypeUnits;
-    }
-
-    public List<MakeMoveEvent> cleanerByAttacker(UnitType unitType, List<MakeMoveEvent> movesRoot) {
-        List<MakeMoveEvent> tmpList = new ArrayList<>();
-        for(MakeMoveEvent moveEvent : movesRoot){
-            if(moveEvent.getAttacker().getUnitType() == unitType){
-                tmpList.add(moveEvent);
-            }
-        }
-        return tmpList;
-    }
-
     @SneakyThrows
     private UtilityMoveResult getBestMoveInCluster(List<UtilityMoveResult> points, KMeans.Cluster cluster, List<MakeMoveEvent> movesRoot, GameState gameState, boolean maxPlayer) {
         List<RecursiveTask<UtilityMoveResult>> tasks = new ArrayList<>();
