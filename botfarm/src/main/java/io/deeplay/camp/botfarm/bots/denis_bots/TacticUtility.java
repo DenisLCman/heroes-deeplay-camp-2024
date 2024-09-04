@@ -457,6 +457,29 @@ public class TacticUtility implements UtilityFunction{
         return (double) countWin / countGame;
     }
 
+    @Override
+    public List<MakeMoveEvent> changeMoveByTactic(GameState gameState, List<MakeMoveEvent> moveEvents) {
+        List<MakeMoveEvent> movesRoot = moveEvents;
+        if(currentPlayerType == PlayerType.FIRST_PLAYER) {
+            if (enumerationMovedUnits(currentPlayerType, gameState) < enumerationTypeUnits(currentPlayerType, gameState, UnitType.KNIGHT)) {
+                movesRoot = cleanerByAttacker(UnitType.KNIGHT, movesRoot);
+            } else if (enumerationMovedUnits(currentPlayerType, gameState) < enumerationTypeUnits(currentPlayerType, gameState, UnitType.ARCHER)) {
+                movesRoot = cleanerByAttacker(UnitType.ARCHER, movesRoot);
+            } else if (enumerationMovedUnits(currentPlayerType, gameState) < enumerationTypeUnits(currentPlayerType, gameState, UnitType.HEALER)) {
+                movesRoot = cleanerByAttacker(UnitType.HEALER, movesRoot);
+            }
+        }
+        else{
+            if (enumerationMovedUnits(currentPlayerType, gameState) < enumerationTypeUnits(currentPlayerType, gameState, UnitType.KNIGHT)) {
+                movesRoot = cleanerByAttacker(UnitType.KNIGHT, movesRoot);
+            } else if (enumerationMovedUnits(currentPlayerType, gameState) < enumerationTypeUnits(currentPlayerType, gameState, UnitType.ARCHER)) {
+                movesRoot = cleanerByAttacker(UnitType.ARCHER, movesRoot);
+            } else if (enumerationMovedUnits(currentPlayerType, gameState) < enumerationTypeUnits(currentPlayerType, gameState, UnitType.HEALER)) {
+                movesRoot = cleanerByAttacker(UnitType.HEALER, movesRoot);
+            }
+        }
+        return movesRoot;
+    }
 
 
     public void executeMove(GameState gameState, int countGame, Bot botFirst, Bot botSecond)
@@ -512,6 +535,66 @@ public class TacticUtility implements UtilityFunction{
                 }
             }
         }
+
+
+    public Integer enumerationMovedUnits(PlayerType playerType, GameState gameState) {
+        int countMovedUnits = 0;
+        if (playerType == PlayerType.FIRST_PLAYER) {
+            for(int column = 0; column<Board.COLUMNS;column++){
+                for(int row = 0; row< Board.ROWS/2;row++){
+                    if(gameState.getCurrentBoard().getUnit(column,row).isMoved() &&
+                            gameState.getCurrentBoard().getUnit(column,row).isAlive()){
+                        countMovedUnits++;
+                    }
+                }
+            }
+        } else {
+            for(int column = 0; column<Board.COLUMNS;column++){
+                for(int row = Board.ROWS/2; row< Board.ROWS;row++){
+                    if(gameState.getCurrentBoard().getUnit(column,row).isMoved() &&
+                            gameState.getCurrentBoard().getUnit(column,row).isAlive()){
+                        countMovedUnits++;
+                    }
+                }
+            }
+        }
+        return countMovedUnits;
+    }
+
+    public Integer enumerationTypeUnits(PlayerType playerType, GameState gameState, UnitType unitType) {
+        int countTypeUnits = 0;
+        if (playerType == PlayerType.FIRST_PLAYER) {
+            for(int column = 0; column<Board.COLUMNS;column++){
+                for(int row = 0; row< Board.ROWS/2;row++){
+                    if(gameState.getCurrentBoard().getUnit(column,row).getUnitType() == unitType &&
+                            gameState.getCurrentBoard().getUnit(column,row).isAlive()){
+                        countTypeUnits++;
+                    }
+                }
+            }
+        } else {
+            for(int column = 0; column<Board.COLUMNS;column++){
+                for(int row = Board.ROWS/2; row< Board.ROWS;row++){
+                    if(gameState.getCurrentBoard().getUnit(column,row).getUnitType() == unitType &&
+                            gameState.getCurrentBoard().getUnit(column,row).isAlive()){
+                        countTypeUnits++;
+                    }
+                }
+            }
+        }
+        return countTypeUnits;
+    }
+
+    public List<MakeMoveEvent> cleanerByAttacker(UnitType unitType, List<MakeMoveEvent> movesRoot) {
+        List<MakeMoveEvent> tmpList = new ArrayList<>();
+        for(MakeMoveEvent moveEvent : movesRoot){
+            if(moveEvent.getAttacker().getUnitType() == unitType){
+                tmpList.add(moveEvent);
+            }
+        }
+        return tmpList;
+    }
+
 
 
 

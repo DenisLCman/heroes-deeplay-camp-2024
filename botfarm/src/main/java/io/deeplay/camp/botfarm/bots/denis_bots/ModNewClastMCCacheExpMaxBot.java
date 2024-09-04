@@ -217,6 +217,7 @@ public class ModNewClastMCCacheExpMaxBot extends Bot {
     private UtilityMoveResult getMoveResult(GameState gameState) {
         int originDepth = maxDepth;
         List<MakeMoveEvent> movesRoot = gameState.getPossibleMoves();
+        movesRoot = tacticUtility.changeMoveByTactic(gameState, movesRoot);
 
         if (movesRoot.isEmpty()) {
             return new UtilityMoveResult(Double.NEGATIVE_INFINITY, null);
@@ -274,6 +275,7 @@ public class ModNewClastMCCacheExpMaxBot extends Bot {
             return tacticUtility.getMoveUtility(root);
         }
         List<MakeMoveEvent> movesRoot = root.getPossibleMoves();
+        movesRoot = tacticUtility.changeMoveByTactic(root, movesRoot);
 
         List<UtilityMoveResult> points = new ArrayList<>();
         for (MakeMoveEvent move : movesRoot) {

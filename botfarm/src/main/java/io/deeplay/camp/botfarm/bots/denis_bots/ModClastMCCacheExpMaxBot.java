@@ -217,14 +217,8 @@ public class ModClastMCCacheExpMaxBot extends Bot {
     private UtilityMoveResult getMoveResult(GameState gameState) {
         int originDepth = maxDepth;
         List<MakeMoveEvent> movesRoot = gameState.getPossibleMoves();
-        PlayerType playerType = tacticUtility.getCurrentPlayerType();
-        if(enumerationMovedUnits(playerType, gameState) < enumerationTypeUnits(playerType, gameState, UnitType.HEALER)){
-            movesRoot = cleanerByAttacker(UnitType.HEALER, movesRoot);
-        } else if(enumerationMovedUnits(playerType, gameState) < enumerationTypeUnits(playerType, gameState, UnitType.KNIGHT)){
-            movesRoot = cleanerByAttacker(UnitType.KNIGHT, movesRoot);
-        } else if(enumerationMovedUnits(playerType, gameState) < enumerationTypeUnits(playerType, gameState, UnitType.ARCHER)){
-            movesRoot = cleanerByAttacker(UnitType.ARCHER, movesRoot);
-        }
+
+
 
         if (movesRoot.isEmpty()) {
             return new UtilityMoveResult(Double.NEGATIVE_INFINITY, null);
@@ -274,14 +268,9 @@ public class ModClastMCCacheExpMaxBot extends Bot {
             return tacticUtility.getMoveUtility(root);
         }
         List<MakeMoveEvent> movesRoot = root.getPossibleMoves();
-        PlayerType playerType = tacticUtility.getCurrentPlayerType();
-        if(enumerationMovedUnits(playerType, root) < enumerationTypeUnits(playerType, root, UnitType.HEALER)){
-            movesRoot = cleanerByAttacker(UnitType.HEALER, movesRoot);
-        } else if(enumerationMovedUnits(playerType, root) < enumerationTypeUnits(playerType, root, UnitType.KNIGHT)){
-            movesRoot = cleanerByAttacker(UnitType.KNIGHT, movesRoot);
-        } else if(enumerationMovedUnits(playerType, root) < enumerationTypeUnits(playerType, root, UnitType.ARCHER)){
-            movesRoot = cleanerByAttacker(UnitType.ARCHER, movesRoot);
-        }
+
+
+
         List<UtilityMoveResult> points = new ArrayList<>();
         for (MakeMoveEvent move : movesRoot) {
             UtilityMoveResult features = extractValue(root, move);
