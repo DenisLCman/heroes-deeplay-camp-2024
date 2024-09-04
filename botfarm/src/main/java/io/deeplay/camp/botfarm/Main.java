@@ -3,6 +3,10 @@ package io.deeplay.camp.botfarm;
 
 import io.deeplay.camp.botfarm.bots.RandomBot;
 import io.deeplay.camp.botfarm.bots.denis_bots.*;
+import io.deeplay.camp.botfarm.bots.matthew_bots.MatthewsBot;
+import io.deeplay.camp.botfarm.bots.matthew_bots.movement_stage.AlphaBetaMinimaxBot;
+import io.deeplay.camp.botfarm.bots.matthew_bots.movement_stage.MultiThreadExpectimaxBot;
+import io.deeplay.camp.botfarm.bots.matthew_bots.placement_stage.RandomPlacementBot;
 import io.deeplay.camp.game.exceptions.GameException;
 import io.deeplay.camp.game.mechanics.GameState;
 import io.deeplay.camp.game.mechanics.PlayerType;
@@ -41,8 +45,8 @@ public class Main {
   }
 
   public static void BotFightFun() throws IOException {
-    ModNewClastMetricPlaceExpMaxBot bot1 = new ModNewClastMetricPlaceExpMaxBot(PlayerType.FIRST_PLAYER, 5);
-    ModNewClastMCCacheExpMaxBot bot2 = new ModNewClastMCCacheExpMaxBot(PlayerType.SECOND_PLAYER, 5);
+    ModNewClastMetricPlaceExpMaxBot bot1 = new ModNewClastMetricPlaceExpMaxBot(PlayerType.FIRST_PLAYER, 4);
+    ModNewClastMCCacheExpMaxBot bot2 = new ModNewClastMCCacheExpMaxBot(PlayerType.SECOND_PLAYER,5);
 
     for(int i = 0; i<1;i++){
       BotFight fight = new BotFight(bot1, bot2, 100, true);

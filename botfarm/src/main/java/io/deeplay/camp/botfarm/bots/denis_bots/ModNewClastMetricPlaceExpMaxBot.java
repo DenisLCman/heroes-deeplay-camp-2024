@@ -46,19 +46,13 @@ public class ModNewClastMetricPlaceExpMaxBot extends Bot {
         if(gameState.getCurrentPlayer() == PlayerType.FIRST_PLAYER){
             int rand = (int)(Math.random()*5);
             switch (rand){
-                case 0 -> {
+                case 0,1 -> {
                     botTactic = BotTactic.KNIGHT_TACTIC;
                 }
-                case 1 -> {
+                case 2,3 -> {
                     botTactic = BotTactic.HEALER_TACTIC;
                 }
-                case 2,3 -> {
-                    botTactic = BotTactic.MAGE_TACTIC;
-                }
-                case 4 -> {
-                    botTactic = BotTactic.ARCHER_TACTIC;
-                }
-                default -> botTactic = BotTactic.MAGE_TACTIC;
+                default -> botTactic = BotTactic.HEALER_TACTIC;
             }
         }
         else if (gameState.getCurrentPlayer() == PlayerType.SECOND_PLAYER){

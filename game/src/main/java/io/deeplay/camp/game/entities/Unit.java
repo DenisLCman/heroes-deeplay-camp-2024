@@ -61,6 +61,11 @@ public abstract class Unit implements GeneralBuff {
     this.attackType = unit.getAttackType();
   }
 
+  @JsonIgnore
+
+  public abstract Unit getCopy();
+
+
   public void setAttack(AttackType attackType) {
     this.attackType = attackType;
   }

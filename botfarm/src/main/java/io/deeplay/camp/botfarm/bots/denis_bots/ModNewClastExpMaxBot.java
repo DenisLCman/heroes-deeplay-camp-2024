@@ -67,7 +67,7 @@ public class ModNewClastExpMaxBot extends Bot {
                 points.add(features);
             }
             KMeans kMeans = new KMeans();
-            int numClusters = Math.min(3, movesRoot.size());  // количество кластеров можно варьировать
+            int numClusters = Math.min(5, movesRoot.size());  // количество кластеров можно варьировать
             List<KMeans.Cluster> clusters = kMeans.kMeansCluster(points, numClusters, 100);
 
 
@@ -124,7 +124,7 @@ public class ModNewClastExpMaxBot extends Bot {
             points.add(features);
         }
         KMeans kMeans = new KMeans();
-        int numClusters = Math.min(3, movesRoot.size());  // количество кластеров можно варьировать
+        int numClusters = Math.min(5, movesRoot.size());  // количество кластеров можно варьировать
         List<KMeans.Cluster> clusters = kMeans.kMeansCluster(points, numClusters, 100);
 
         List<UtilityMoveResult> bestMoves = new ArrayList<>();
