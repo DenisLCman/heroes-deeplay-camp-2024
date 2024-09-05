@@ -12,6 +12,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class UtilityPlaceResult {
+    /** Значение полезности данного действия */
     double value;
+    /** Само рассматриваемое действие */
     PlaceUnitEvent place;
 }

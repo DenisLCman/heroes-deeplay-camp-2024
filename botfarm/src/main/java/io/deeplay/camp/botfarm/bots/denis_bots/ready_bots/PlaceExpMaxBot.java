@@ -17,12 +17,23 @@ import lombok.Setter;
  * Расстановку, создаваемую через эмпирическую функцию полезности юнита при расстановке.
  */
 public class PlaceExpMaxBot extends Bot {
+    /** Тактика для данной битвы */
     UtilityFunction tacticUtility;
+    /** Максимальная глубина для построения дерева */
     int maxDepth;
+    /** Является ли эта расстановка первой? */
     @Setter boolean firstPlaceInGame = true;
+    /** Алгоритм для игрового процесса */
     SimpleExpMaxAlg movementAlg;
+    /** Алгоритм для фазы расстановки */
     EvristicPlaceAlg placementAlg;
 
+    /**
+     * Конструктор.
+     *
+     * @param playerType Данная позиция игрока бота.
+     * @param maxDepth Максимальная глубина дерева решений.
+     */
     public PlaceExpMaxBot(PlayerType playerType, int maxDepth){
         tacticUtility = new TacticUtility(BotTactic.KNIGHT_TACTIC);
         tacticUtility.setCurrentPlayerType(playerType);

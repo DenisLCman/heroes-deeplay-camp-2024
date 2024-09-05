@@ -22,13 +22,23 @@ import lombok.Setter;
  * Ограничение по времени для нахождения оптимального хода.
  */
 public class TimeLimitNewClastMCCacheExpMaxBot extends Bot {
+    /** Тактика для данной битвы */
     UtilityFunction tacticUtility;
+    /** Максимальная глубина для построения дерева */
     int maxDepth;
-    GameStateCache gameStateCache;
+    /** Является ли эта расстановка первой? */
     @Setter boolean firstPlaceInGame = true;
+    /** Алгоритм для игрового процесса */
     TimeLimitNewClastExpMaxAlg movementAlg;
+    /** Алгоритм для фазы расстановки */
     MCCachePlaceAlg placementAlg;
 
+    /**
+     * Конструктор.
+     *
+     * @param playerType Данная позиция игрока бота.
+     * @param maxDepth Максимальная глубина дерева решений.
+     */
     public TimeLimitNewClastMCCacheExpMaxBot(PlayerType playerType, int maxDepth){
         tacticUtility = new TacticUtility(BotTactic.BASE_TACTIC);
         tacticUtility.setCurrentPlayerType(playerType);

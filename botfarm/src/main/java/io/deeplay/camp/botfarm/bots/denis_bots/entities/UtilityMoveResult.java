@@ -12,7 +12,9 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class UtilityMoveResult implements Comparable<UtilityMoveResult>{
+    /** Значение полезности данного действия */
     double value;
+    /** Само рассматриваемое действие */
     MakeMoveEvent event;
 
     /**

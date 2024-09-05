@@ -13,6 +13,12 @@ import java.util.List;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 
+/**
+ * Алгоритм игрового процесса, использующий:
+ * МинМакс,
+ * Альфа-Бета отсечение,
+ * Начальную многопоточность.
+ */
 public class ABMinMaxAlg {
     final int originDepth;
     UtilityFunction tacticUtility;

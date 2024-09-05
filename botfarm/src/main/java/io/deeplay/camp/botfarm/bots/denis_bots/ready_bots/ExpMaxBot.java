@@ -21,12 +21,23 @@ import lombok.Setter;
  * Ограничение по времени для нахождения оптимального хода.
  */
 public class ExpMaxBot extends Bot {
+    /** Тактика для данной битвы */
     UtilityFunction tacticUtility;
+    /** Максимальная глубина для построения дерева */
     int maxDepth;
+    /** Является ли эта расстановка первой? */
     @Setter boolean firstPlaceInGame = true;
+    /** Алгоритм для игрового процесса */
     SimpleExpMaxAlg movementAlg;
+    /** Алгоритм для фазы расстановки */
     RandomPlaceAlg placementAlg;
 
+    /**
+     * Конструктор.
+     *
+     * @param playerType Данная позиция игрока бота.
+     * @param maxDepth Максимальная глубина дерева решений.
+     */
     public ExpMaxBot(PlayerType playerType, int maxDepth){
         tacticUtility = new TacticUtility(BotTactic.BASE_TACTIC);
         tacticUtility.setCurrentPlayerType(playerType);

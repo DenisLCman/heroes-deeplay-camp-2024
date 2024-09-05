@@ -19,16 +19,24 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 
+/**
+ * Алгоритм расстановки основанный эвристической функции.
+ */
 public class EvristicPlaceAlg {
     UtilityFunction tacticUtility;
     BotTactic botTactic;
     UnitType currentGeneral;
     Board bestBoard;
 
+
     public EvristicPlaceAlg(UtilityFunction tacticUtility){
         this.tacticUtility = tacticUtility;
     }
-
+    /**
+     * Функция для нахождения более приемлемой тактики, основанной на
+     * выборе вражеского генерала, или случайного генерала для первого
+     * игрока.
+     */
     public void findNewTactic(GameState gameState){
         if(gameState == null){
             botTactic = BotTactic.KNIGHT_TACTIC;
@@ -87,6 +95,9 @@ public class EvristicPlaceAlg {
         tacticUtility.setBotTactic(botTactic);
     }
 
+    /**
+     * Функция для приемлемой расстановки.
+     */
     public PlaceUnitEvent getPlaceResult(GameState gameState) {
 
         int originDepth;
@@ -136,7 +147,10 @@ public class EvristicPlaceAlg {
 
     }
 
-
+    /**
+     * Функция для находения максимизирующего набора расстановок для игрока.
+     * Упрощённая версия МинМакса.
+     */
     public double maximumPlaceAlg(GameState root, int depth) throws GameException {
         if(depth == 0 || root.getGameStage() == GameStage.ENDED){
             if(tacticUtility.getCurrentPlayerType() == PlayerType.FIRST_PLAYER){
@@ -188,6 +202,10 @@ public class EvristicPlaceAlg {
         }
 
     }
+
+    /**
+     * Метод для подсчитывания количества юнитов у определённого игрока
+     */
     private List<Position> enumerationPlayerUnits(PlayerType playerType, Board board) {
         List<Position> unitPositions = new ArrayList<>();
         if (playerType == PlayerType.FIRST_PLAYER) {

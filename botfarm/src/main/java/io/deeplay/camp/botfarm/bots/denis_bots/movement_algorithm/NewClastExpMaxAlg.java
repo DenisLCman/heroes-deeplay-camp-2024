@@ -16,10 +16,18 @@ import java.util.List;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 
+
+/**
+ * Алгоритм игрового процесса, использующий:
+ * ЭкспектиМакс,
+ * Улучшенную кластеризацию,
+ * Многопоточность,
+ * Отсечение по вероятностям.
+ */
 public class NewClastExpMaxAlg {
     final int originDepth;
     UtilityFunction tacticUtility;
-    double eps = 0.001;
+    final double eps = 0.001;
     public NewClastExpMaxAlg(int maxDepth, UtilityFunction tacticUtility){
         this.originDepth = maxDepth;
         this.tacticUtility = tacticUtility;

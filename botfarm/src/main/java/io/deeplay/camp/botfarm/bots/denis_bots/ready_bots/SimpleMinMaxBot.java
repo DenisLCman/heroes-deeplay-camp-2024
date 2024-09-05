@@ -18,13 +18,23 @@ import lombok.Setter;
  * Рандомную расстановку
  */
 public class SimpleMinMaxBot extends Bot {
+    /** Тактика для данной битвы */
     UtilityFunction tacticUtility;
+    /** Максимальная глубина для построения дерева */
     int maxDepth;
-    @Setter
-    boolean firstPlaceInGame = true;
+    /** Является ли эта расстановка первой? */
+    @Setter boolean firstPlaceInGame = true;
+    /** Алгоритм для игрового процесса */
     SimpleMinMaxAlg movementAlg;
+    /** Алгоритм для фазы расстановки */
     RandomPlaceAlg placementAlg;
 
+    /**
+     * Конструктор.
+     *
+     * @param playerType Данная позиция игрока бота.
+     * @param maxDepth Максимальная глубина дерева решений.
+     */
     public SimpleMinMaxBot(PlayerType playerType, int maxDepth){
         tacticUtility = new TacticUtility(BotTactic.BASE_TACTIC);
         tacticUtility.setCurrentPlayerType(playerType);

@@ -6,13 +6,20 @@ import io.deeplay.camp.game.mechanics.GameState;
 
 import java.util.List;
 
+/**
+ * Алгоритм случайной расстановки
+ */
 public class RandomPlaceAlg {
     public RandomPlaceAlg(UtilityFunction tacticUtility){
 
     }
+
     public void findNewTactic(GameState gameState){
 
     }
+    /**
+     * Функция для приемлемой расстановки.
+     */
     public PlaceUnitEvent getPlaceResult(GameState gameState){
         List<PlaceUnitEvent> placeUnitEvents = gameState.getPossiblePlaces();
         if(!placeUnitEvents.isEmpty()){

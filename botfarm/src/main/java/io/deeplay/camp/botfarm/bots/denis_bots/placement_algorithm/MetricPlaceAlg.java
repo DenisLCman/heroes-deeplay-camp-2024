@@ -10,6 +10,9 @@ import io.deeplay.camp.game.mechanics.PlayerType;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Алгоритм расстановки, основанной на метрических данных
+ */
 public class MetricPlaceAlg {
     UtilityFunction tacticUtility;
     BotTactic botTactic;
@@ -19,6 +22,12 @@ public class MetricPlaceAlg {
     public MetricPlaceAlg(UtilityFunction tacticUtility){
         this.tacticUtility = tacticUtility;
     }
+
+    /**
+     * Функция для нахождения более приемлемой тактики, основанной на
+     * выборе вражеского генерала, или случайного генерала для первого
+     * игрока.
+     */
     public void findNewTactic(GameState gameState){
         bestBoard = new Board();
         if(gameState == null){
@@ -67,7 +76,9 @@ public class MetricPlaceAlg {
         tacticUtility.setBotTactic(botTactic);
     }
 
-
+    /**
+     * Функция для приемлемой расстановки.
+     */
     public PlaceUnitEvent getPlaceResult(GameState gameState){
 
         switch (currentGeneral){
@@ -100,7 +111,10 @@ public class MetricPlaceAlg {
         return null;
 
     }
-
+    /**
+     * Функция заполняющая доску лучшими юнитами, основанными на
+     * метрических данных.
+     */
     private void autoFillBoard(UnitType unitType){
         PlayerType playerTypeThis = tacticUtility.getCurrentPlayerType();
         if(playerTypeThis == PlayerType.FIRST_PLAYER){
@@ -181,6 +195,10 @@ public class MetricPlaceAlg {
         }
 
     }
+
+    /**
+     * Метод для подсчитывания количества юнитов у определённого игрока
+     */
     private List<Position> enumerationPlayerUnits(PlayerType playerType, Board board) {
         List<Position> unitPositions = new ArrayList<>();
         if (playerType == PlayerType.FIRST_PLAYER) {

@@ -18,6 +18,9 @@ import java.util.List;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 
+/**
+ * Алгоритм расстановки основанный на Монте-Карло.
+ */
 public class MCPlaceAlg {
     UtilityFunction tacticUtility;
     BotTactic botTactic;
@@ -31,7 +34,11 @@ public class MCPlaceAlg {
         gameStateCache = new GameStateCache();
     }
 
-
+    /**
+     * Функция для нахождения более приемлемой тактики, основанной на
+     * выборе вражеского генерала, или случайного генерала для первого
+     * игрока.
+     */
     public void findNewTactic(GameState gameState){
         bestBoard = new Board();
         if(gameState == null){
@@ -86,6 +93,9 @@ public class MCPlaceAlg {
         tacticUtility.setBotTactic(botTactic);
     }
 
+    /**
+     * Функция для выбора приемлемой расстановки.
+     */
     public UtilityPlaceResult getPlaceResult(GameState gameState){
         int originDepth = 1;
 
@@ -138,7 +148,9 @@ public class MCPlaceAlg {
             return getMaxPlaceFromTasks(results);
         }
     }
-
+    /**
+     * Функция для находения максимизирующего набора расстановок через алгоритм Монте-Карло.
+     */
     public double maximumPlaceAlg(GameState root, int depth, PlaceUnitEvent placeUnitEvent) {
         if(depth == 0){
             return tacticUtility.monteCarloAlg(root, 10, placeUnitEvent);
@@ -191,7 +203,9 @@ public class MCPlaceAlg {
             return getMaxPlaceFromTasks(results).getValue();
         }
     }
-
+    /**
+     * Функция находящая максимальную расстановку из массива results.
+     */
     private UtilityPlaceResult getMaxPlaceFromTasks(List<UtilityPlaceResult> results){
         UtilityPlaceResult bestValue = new UtilityPlaceResult(Double.NEGATIVE_INFINITY, null);
         for (UtilityPlaceResult task : results) {
@@ -203,6 +217,9 @@ public class MCPlaceAlg {
         return bestValue;
     }
 
+    /**
+     * Метод для подсчитывания количества юнитов у определённого игрока
+     */
     public List<Position> enumerationPlayerUnits(PlayerType playerType, Board board) {
         List<Position> unitPositions = new ArrayList<>();
         if (playerType == PlayerType.FIRST_PLAYER) {

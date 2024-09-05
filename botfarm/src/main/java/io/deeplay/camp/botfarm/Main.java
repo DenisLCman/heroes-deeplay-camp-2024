@@ -3,10 +3,11 @@ package io.deeplay.camp.botfarm;
 
 import io.deeplay.camp.botfarm.bots.denis_bots.*;
 import io.deeplay.camp.botfarm.bots.denis_bots.entities.BotTactic;
+import io.deeplay.camp.botfarm.bots.denis_bots.movement_algorithm.ModClastExpMaxAlg;
 import io.deeplay.camp.botfarm.bots.denis_bots.movement_algorithm.OptNewClastExpMaxAlg;
+import io.deeplay.camp.botfarm.bots.denis_bots.movement_algorithm.TimeLimitNewClastExpMaxAlg;
 import io.deeplay.camp.botfarm.bots.denis_bots.placement_algorithm.MetricPlaceAlg;
-import io.deeplay.camp.botfarm.bots.denis_bots.ready_bots.ModClastMCPlaceExpMaxBot;
-import io.deeplay.camp.botfarm.bots.denis_bots.ready_bots.TimeLimitNewClastMCCacheExpMaxBot;
+import io.deeplay.camp.botfarm.bots.denis_bots.ready_bots.*;
 import io.deeplay.camp.game.mechanics.GameState;
 import io.deeplay.camp.game.mechanics.PlayerType;
 
@@ -42,11 +43,11 @@ public class Main {
   }
 
   public static void BotFightFun() throws IOException {
-    TimeLimitNewClastMCCacheExpMaxBot bot1 = new TimeLimitNewClastMCCacheExpMaxBot(PlayerType.FIRST_PLAYER, 4);
+    TimeLimitNewClastMetricPlaceExpMaxBot bot1 = new TimeLimitNewClastMetricPlaceExpMaxBot(PlayerType.FIRST_PLAYER, 4);
     TimeLimitNewClastMCCacheExpMaxBot bot2 = new TimeLimitNewClastMCCacheExpMaxBot(PlayerType.SECOND_PLAYER,4);
 
     for(int i = 0; i<1;i++){
-      BotFight fight = new BotFight(bot1, bot2, 100, true);
+      BotFight fight = new BotFight(bot1, bot2, 10, true);
     }
   }
 

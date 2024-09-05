@@ -17,6 +17,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Алгоритм расстановки основанный взятых расстановок из кэша.
+ */
 public class MCCachePlaceAlg {
     UtilityFunction tacticUtility;
     BotTactic botTactic;
@@ -30,7 +33,11 @@ public class MCCachePlaceAlg {
         gameStateCache = new GameStateCache();
     }
 
-
+    /**
+     * Функция для нахождения более приемлемой тактики, основанной на
+     * выборе вражеского генерала, или случайного генерала для первого
+     * игрока.
+     */
     public void findNewTactic(GameState gameState){
         bestBoard = new Board();
         if(gameState == null){
@@ -91,7 +98,14 @@ public class MCCachePlaceAlg {
             throw new RuntimeException(e);
         }
     }
-
+    /**
+     * Функция для нахождения лучшей расстановки из возможных,
+     * которые будут взяты из кэша хороших расстановок.
+     * Если вражеская расстановка есть в кэше, будет взята
+     * противоборствующая ей расстановка. Если расстановка
+     * не найдена, будет взята лучшая расстановка в зависимости
+     * от выбранного генерала
+     */
     private void findBestBoardFromCache(GameState gameState) throws IOException, ClassNotFoundException {
         bestBoard = null;
         gameStateCache = gameStateCache.loadCacheFromFile(".\\botfarm\\src\\main\\java\\io\\deeplay\\camp\\botfarm\\bots\\denis_bots\\hashStartGame.json");
@@ -147,6 +161,9 @@ public class MCCachePlaceAlg {
         }
     }
 
+    /**
+     * Функция для приемлемой расстановки.
+     */
     @SneakyThrows
     public PlaceUnitEvent getPlaceResult(GameState gameState){
         PlayerType forPlayerType = tacticUtility.getCurrentPlayerType();
@@ -195,6 +212,10 @@ public class MCCachePlaceAlg {
         }
         return result;
     }
+
+    /**
+     * Метод для подсчитывания количества юнитов у определённого игрока
+     */
     private List<Position> enumerationPlayerUnits(PlayerType playerType, Board board) {
         List<Position> unitPositions = new ArrayList<>();
         if (playerType == PlayerType.FIRST_PLAYER) {

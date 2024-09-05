@@ -18,13 +18,23 @@ import lombok.Setter;
  * Альфа-Бета отсечение.
  */
 public class PlaceABMinMaxBot extends Bot {
+    /** Тактика для данной битвы */
     UtilityFunction tacticUtility;
+    /** Максимальная глубина для построения дерева */
     int maxDepth;
-    @Setter
-    boolean firstPlaceInGame = true;
+    /** Является ли эта расстановка первой? */
+    @Setter boolean firstPlaceInGame = true;
+    /** Алгоритм для игрового процесса */
     ABMinMaxAlg movementAlg;
+    /** Алгоритм для фазы расстановки */
     EvristicPlaceAlg placementAlg;
 
+    /**
+     * Конструктор.
+     *
+     * @param playerType Данная позиция игрока бота.
+     * @param maxDepth Максимальная глубина дерева решений.
+     */
     public PlaceABMinMaxBot(PlayerType playerType, int maxDepth){
         tacticUtility = new TacticUtility(BotTactic.BASE_TACTIC);
         tacticUtility.setCurrentPlayerType(playerType);

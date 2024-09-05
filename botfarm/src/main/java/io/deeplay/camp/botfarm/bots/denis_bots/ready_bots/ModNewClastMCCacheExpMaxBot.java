@@ -24,13 +24,23 @@ import org.slf4j.LoggerFactory;
  * Расстановку основанную на метрических данных.
  */
 public class ModNewClastMCCacheExpMaxBot extends Bot {
-    private static final Logger logger = LoggerFactory.getLogger(RandomBot.class);
+    /** Тактика для данной битвы */
     UtilityFunction tacticUtility;
+    /** Максимальная глубина для построения дерева */
     int maxDepth;
+    /** Является ли эта расстановка первой? */
     @Setter boolean firstPlaceInGame = true;
+    /** Алгоритм для игрового процесса */
     NewClastExpMaxAlg movementAlg;
+    /** Алгоритм для фазы расстановки */
     MCCachePlaceAlg placementAlg;
 
+    /**
+     * Конструктор.
+     *
+     * @param playerType Данная позиция игрока бота.
+     * @param maxDepth Максимальная глубина дерева решений.
+     */
     public ModNewClastMCCacheExpMaxBot(PlayerType playerType, int maxDepth){
         tacticUtility = new TacticUtility(BotTactic.KNIGHT_TACTIC);
         tacticUtility.setCurrentPlayerType(playerType);

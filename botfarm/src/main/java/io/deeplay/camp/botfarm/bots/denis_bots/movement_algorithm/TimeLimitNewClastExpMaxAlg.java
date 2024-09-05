@@ -19,10 +19,19 @@ import java.util.List;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 
+/**
+ * Алгоритм игрового процесса, использующий:
+ * Ограничение по времени,
+ * Улучшенную кластеризацию,
+ * ЭкспектиМакс,
+ * Многопоточность,
+ * Отсечение по вероятностям.
+ */
 public class TimeLimitNewClastExpMaxAlg {
     final int originDepth;
     UtilityFunction tacticUtility;
-    double eps = 0.001;
+    final double eps = 0.001;
+    final long timeForThink = 4000;
     public TimeLimitNewClastExpMaxAlg(int maxDepth, UtilityFunction tacticUtility){
         this.originDepth = maxDepth;
         this.tacticUtility = tacticUtility;
@@ -33,7 +42,7 @@ public class TimeLimitNewClastExpMaxAlg {
         int originDepth = this.originDepth;
         List<MakeMoveEvent> movesRoot = gameState.getPossibleMoves();
         movesRoot = tacticUtility.changeMoveByTactic(gameState, movesRoot);
-        long timeToThink = 4000;
+        long timeToThink = timeForThink;
         long startTimeToThink = System.currentTimeMillis();
         if (movesRoot.isEmpty()) {
             return new UtilityMoveResult(Double.NEGATIVE_INFINITY, null);

@@ -11,14 +11,6 @@ import java.util.List;
 public interface UtilityFunction {
 
 
-    /**
-     * Показывает, каким игроком в данный момент является бот
-     */
-    PlayerType currentPlayerType = null;
-    /**
-     * Хранит тактику бота, которую применяет в данной игре бот
-     */
-    BotTactic botTactic = null;
 
     /**
      * Метод, находящий текущую ценность данного игрового состояния

@@ -17,6 +17,11 @@ import java.util.List;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 
+/**
+ * Алгоритм игрового процесса, использующий:
+ * ЭкспектиМакс,
+ * Начальную многопоточность.
+ */
 public class SimpleExpMaxAlg {
     final int originDepth;
     UtilityFunction tacticUtility;
