@@ -1,20 +1,17 @@
-package io.deeplay.camp.botfarm.bots.denis_bots;
+package io.deeplay.camp.botfarm.bots.denis_bots.placement_algorithm;
 
-import io.deeplay.camp.botfarm.bots.Bot;
-import io.deeplay.camp.botfarm.bots.RandomBot;
-import io.deeplay.camp.game.entities.*;
-import io.deeplay.camp.game.events.MakeMoveEvent;
+import io.deeplay.camp.botfarm.bots.denis_bots.entities.BotTactic;
+import io.deeplay.camp.botfarm.bots.denis_bots.UtilityFunction;
+import io.deeplay.camp.botfarm.bots.denis_bots.entities.UtilityPlaceResult;
+import io.deeplay.camp.game.entities.Board;
+import io.deeplay.camp.game.entities.Position;
+import io.deeplay.camp.game.entities.UnitType;
 import io.deeplay.camp.game.events.PlaceUnitEvent;
 import io.deeplay.camp.game.exceptions.GameException;
 import io.deeplay.camp.game.mechanics.GameStage;
 import io.deeplay.camp.game.mechanics.GameState;
 import io.deeplay.camp.game.mechanics.PlayerType;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.SneakyThrows;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,20 +19,24 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 
-public class PlaceExpMaxBot extends Bot {
-    private static final Logger logger = LoggerFactory.getLogger(RandomBot.class);
-    BotTactic botTactic;
+/**
+ * Алгоритм расстановки основанный эвристической функции.
+ */
+public class EvristicPlaceAlg {
     UtilityFunction tacticUtility;
+    BotTactic botTactic;
     UnitType currentGeneral;
-    int maxDepth;
-    @Setter boolean firstPlaceInGame = true;
+    Board bestBoard;
 
-    public PlaceExpMaxBot(PlayerType playerType, int maxDepth){
-        tacticUtility = new TacticUtility(BotTactic.KNIGHT_TACTIC);
-        tacticUtility.setCurrentPlayerType(playerType);
-        this.maxDepth = maxDepth;
+
+    public EvristicPlaceAlg(UtilityFunction tacticUtility){
+        this.tacticUtility = tacticUtility;
     }
-
+    /**
+     * Функция для нахождения более приемлемой тактики, основанной на
+     * выборе вражеского генерала, или случайного генерала для первого
+     * игрока.
+     */
     public void findNewTactic(GameState gameState){
         if(gameState == null){
             botTactic = BotTactic.KNIGHT_TACTIC;
@@ -62,7 +63,7 @@ public class PlaceExpMaxBot extends Bot {
         }
         else if (gameState.getCurrentPlayer() == PlayerType.SECOND_PLAYER){
             UnitType generalOpponent = null;
-            for(int column = 0; column < Board.COLUMNS;column++){
+            for(int column = 0; column < Board.COLUMNS; column++){
                 for(int row = 0; row < Board.ROWS/2;row++){
                     if(gameState.getCurrentBoard().getUnit(column, row).isGeneral()){
                         generalOpponent = gameState.getCurrentBoard().getUnit(column, row).getUnitType();
@@ -94,29 +95,11 @@ public class PlaceExpMaxBot extends Bot {
         tacticUtility.setBotTactic(botTactic);
     }
 
-    @Getter
-    @AllArgsConstructor
-    static class UtilityMoveResult {
-        double value;
-        MakeMoveEvent event;
+    /**
+     * Функция для приемлемой расстановки.
+     */
+    public PlaceUnitEvent getPlaceResult(GameState gameState) {
 
-    }
-
-    @Getter
-    @AllArgsConstructor
-    static class UtilityPlaceResult {
-        double value;
-        PlaceUnitEvent place;
-
-    }
-
-    @Override
-    public PlaceUnitEvent generatePlaceUnitEvent(GameState gameState) {
-        if(firstPlaceInGame) {
-            findNewTactic(gameState);
-            tacticUtility.setBotTactic(botTactic);
-            firstPlaceInGame = false;
-        }
         int originDepth;
         if(gameState.getCurrentPlayer() == PlayerType.FIRST_PLAYER){
             originDepth = enumerationPlayerUnits(PlayerType.FIRST_PLAYER,gameState.getCurrentBoard()).size();
@@ -127,7 +110,7 @@ public class PlaceExpMaxBot extends Bot {
 
         List<PlaceUnitEvent> possiblePlaces =  gameState.getPossiblePlaces();
         if (possiblePlaces.isEmpty()) {
-            return new UtilityPlaceResult(Double.NEGATIVE_INFINITY, null).place;
+            return new UtilityPlaceResult(Double.NEGATIVE_INFINITY, null).getPlace();
         } else{
             UtilityPlaceResult bestValue = new UtilityPlaceResult(Double.NEGATIVE_INFINITY,null);
             List<RecursiveTask<UtilityPlaceResult>> tasks = new ArrayList<>();
@@ -151,7 +134,7 @@ public class PlaceExpMaxBot extends Bot {
             for (UtilityPlaceResult task : results) {
                 try {
                     //System.out.println("Значение цены у данного расположения: " + task.value);
-                    if (bestValue.value < task.value) {
+                    if (bestValue.getValue() < task.getValue()) {
                         bestValue = task;
                     }
                 } catch (CancellationException e) {
@@ -159,11 +142,15 @@ public class PlaceExpMaxBot extends Bot {
             }
 
             //System.out.println("Наивысшая цена расположения: " + bestValue.value);
-            return bestValue.place;
+            return bestValue.getPlace();
         }
 
     }
 
+    /**
+     * Функция для находения максимизирующего набора расстановок для игрока.
+     * Упрощённая версия МинМакса.
+     */
     public double maximumPlaceAlg(GameState root, int depth) throws GameException {
         if(depth == 0 || root.getGameStage() == GameStage.ENDED){
             if(tacticUtility.getCurrentPlayerType() == PlayerType.FIRST_PLAYER){
@@ -216,79 +203,10 @@ public class PlaceExpMaxBot extends Bot {
 
     }
 
-    @Override
-    public MakeMoveEvent generateMakeMoveEvent(GameState gameState) {
-        firstPlaceInGame = true;
-        return getMoveResult(gameState).event;
-    }
-
-    private UtilityMoveResult getMoveResult(GameState gameState) {
-
-        int originDepth = maxDepth;
-        List<MakeMoveEvent> movesRoot = gameState.getPossibleMoves();
-
-        if (movesRoot.isEmpty()) {
-            return new UtilityMoveResult(Double.NEGATIVE_INFINITY, null);
-        } else {
-            List<RecursiveTask<UtilityMoveResult>> tasks = new ArrayList<>();
-            for (MakeMoveEvent moveEvent : movesRoot) {
-                RecursiveTask<UtilityMoveResult> task = new RecursiveTask<>() {
-                    @SneakyThrows
-                    @Override
-                    protected UtilityMoveResult compute() {
-                        double result = expectMaxAlg(gameState, moveEvent,originDepth,
-                                Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, true);
-                        return new UtilityMoveResult(result, moveEvent);
-                    }
-                };
-                tasks.add(task);
-
-            }
-            List<UtilityMoveResult> results = ForkJoinTask.invokeAll(tasks).stream()
-                    .map(ForkJoinTask::join)
-                    .toList();
-
-            return getMaxFromTasks(results);
-        }
-    }
-
-    public double alphaBetaMinMaxAlg(GameState root, int depth, double alpha, double beta, boolean maxPlayer) throws GameException {
-        if(depth == 0 || root.getGameStage() == GameStage.ENDED){
-            return tacticUtility.getMoveUtility(root);
-        }
-        List<MakeMoveEvent> movesRoot = root.getPossibleMoves();
-        double bestValue = maxPlayer ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY;
-        if(movesRoot.isEmpty()){
-            if(root.getGameStage() == GameStage.ENDED){
-                return tacticUtility.getMoveUtility(root);
-            }
-            else {
-                GameState gameStateNode = root.getCopy();
-                gameStateNode.changeCurrentPlayer();
-                return alphaBetaMinMaxAlg(gameStateNode, depth, alpha,beta,!maxPlayer);
-            }
-        } else {
-            for (MakeMoveEvent moveEvent : movesRoot) {
-                double v = expectMaxAlg(root, moveEvent, depth, alpha,beta,maxPlayer);
-                bestValue = maxPlayer ? Math.max(bestValue,v) : Math.min(bestValue,v);
-            }
-            return bestValue;
-        }
-    }
-
-    private double expectMaxAlg(GameState root, MakeMoveEvent event, int depth, double alpha, double beta, boolean maxPlayer) throws GameException {
-        List<StateChance> chancesRoot = root.getPossibleState(event);
-        double excepted = 0;
-        for (StateChance chance : chancesRoot) {
-            GameState nodeGameState = chance.gameState().getCopy();
-            double v = alphaBetaMinMaxAlg(nodeGameState, depth-1, alpha,beta,maxPlayer);
-            excepted += chance.chance() * v;
-        }
-        return excepted;
-    }
-
-
-    public List<Position> enumerationPlayerUnits(PlayerType playerType, Board board) {
+    /**
+     * Метод для подсчитывания количества юнитов у определённого игрока
+     */
+    private List<Position> enumerationPlayerUnits(PlayerType playerType, Board board) {
         List<Position> unitPositions = new ArrayList<>();
         if (playerType == PlayerType.FIRST_PLAYER) {
             unitPositions.addAll(board.enumerateUnits(0, Board.ROWS / 2));
@@ -297,15 +215,5 @@ public class PlaceExpMaxBot extends Bot {
         }
         return unitPositions;
     }
-
-    private UtilityMoveResult getMaxFromTasks(List<UtilityMoveResult> results){
-        UtilityMoveResult bestValue = new UtilityMoveResult(Double.NEGATIVE_INFINITY, null);
-        for (UtilityMoveResult task : results) {
-            if (bestValue.value < task.value) {
-                bestValue = task;
-            }
-        }
-        return bestValue;
-    }
-
 }
+

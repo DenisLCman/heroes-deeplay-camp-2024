@@ -1,7 +1,7 @@
 package io.deeplay.camp.botfarm;
 
 import io.deeplay.camp.botfarm.bots.Bot;
-import io.deeplay.camp.botfarm.bots.denis_bots.GameStateCache;
+import io.deeplay.camp.botfarm.bots.denis_bots.tools.GameStateCache;
 import io.deeplay.camp.game.Game;
 import io.deeplay.camp.game.entities.Board;
 import io.deeplay.camp.game.entities.Unit;
@@ -89,11 +89,6 @@ public class BotFight extends Thread{
     }
 
     public void playGames() throws GameException, InterruptedException, IOException {
-        try {
-            gameStateCache = gameStateCache.loadCacheFromFile("hashStartGame.json");
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
 
         for (int gameCount = 0; gameCount < countGame; gameCount++) {
 
@@ -131,7 +126,6 @@ public class BotFight extends Thread{
             System.out.println("Завершение игры номер - " + gameCount);
         }
 
-        //gameStateCache.saveCacheToFile("hashStartGame.json");
         if (outInfoGame) {
             gameAnalisys.outputInfo();
         }
@@ -147,9 +141,10 @@ public class BotFight extends Thread{
                     continue;
                 }
                 long endTimer = System.currentTimeMillis();
-                if(endTimer - startTimer > 500000){
+                if(endTimer - startTimer > 5000){
                     GiveUpEvent giveUpEvent = new GiveUpEvent(PlayerType.FIRST_PLAYER);
                     gameState.giveUp(giveUpEvent);
+                    System.out.println("Сдался первый игрок");
                 }
 
                 game.makeMove(event);
@@ -163,9 +158,10 @@ public class BotFight extends Thread{
                 }
                 long endTimer = System.currentTimeMillis();
                 gameAnalisys.reviewTimeMove(endTimer - startTimer, countGame);
-                if(endTimer - startTimer > 500000){
+                if(endTimer - startTimer > 5000){
                     GiveUpEvent giveUpEvent = new GiveUpEvent(PlayerType.SECOND_PLAYER);
                     gameState.giveUp(giveUpEvent);
+                    System.out.println("Сдался второй игрок");
                 }
 
                 game.makeMove(event);

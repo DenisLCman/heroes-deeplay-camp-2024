@@ -2,6 +2,7 @@ package io.deeplay.camp.botfarm.bots.denis_bots;
 
 import io.deeplay.camp.botfarm.bots.Bot;
 import io.deeplay.camp.botfarm.bots.RandomBot;
+import io.deeplay.camp.botfarm.bots.denis_bots.entities.BotTactic;
 import io.deeplay.camp.game.Game;
 import io.deeplay.camp.game.entities.*;
 import io.deeplay.camp.game.events.ChangePlayerEvent;
@@ -21,21 +22,25 @@ import java.util.List;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 
+/**
+ * Класс реализующий все вспомогательные общие функции для бота в зависимости от его
+ * позиции игрока и его тактики.
+ */
 public class TacticUtility implements UtilityFunction{
 
+    /** Текущая тактика бота */
     BotTactic currentBotTactic;
+    /** Текущая позиция игрока бота */
+    @Setter
     PlayerType currentPlayerType;
 
+    /**
+     * Конструктор.
+     *
+     * @param botTactic Выбранная тактика для бота.
+     */
     public TacticUtility(BotTactic botTactic){
         currentBotTactic = botTactic;
-    }
-
-    public void setCurrentBotTactic(BotTactic currentBotTactic) {
-        this.currentBotTactic = currentBotTactic;
-    }
-
-    public void setCurrentPlayerType(PlayerType playerType){
-        this.currentPlayerType = playerType;
     }
 
     @Override
@@ -46,21 +51,6 @@ public class TacticUtility implements UtilityFunction{
     @Override
     public double getMoveUtility(GameState gameState) {
         switch (currentBotTactic){
-            /*
-            case MAGE_TACTIC -> {
-                return mageTacticUtility(gameState);
-            }
-            case KNIGHT_TACTIC -> {
-                return knightTacticUtility(gameState);
-            }
-            case ARCHER_TACTIC -> {
-                return archerTacticUtility(gameState);
-            }
-            case HEALER_TACTIC -> {
-                return healerTacticUtility(gameState);
-            }
-
-             */
             case BASE_TACTIC -> {
                 return baseTacticUtility(gameState);
             }
@@ -70,6 +60,12 @@ public class TacticUtility implements UtilityFunction{
         }
     }
 
+    /**
+     * Метод, возвращающий полезность данного игрового состояния боту.
+     * Содержит в себе базовую функцию полезности для всех ботов.
+     * @param gameState Игровое состояние.
+     * @return Возвращает значения от -1 до 1 в double.
+     */
     private double baseTacticUtility(GameState gameState) {
         int firstHp = 0;
         int secondHp = 0;
@@ -117,7 +113,6 @@ public class TacticUtility implements UtilityFunction{
         return result;
     }
 
-
     @Override
     public double getPlaceUtility(GameState gameState) {
 
@@ -161,190 +156,14 @@ public class TacticUtility implements UtilityFunction{
         this.currentBotTactic = botTactic;
     }
 
-    private double mageTacticUtility(GameState gameState){
-        int firstHp = 0;
-        int secondHp = 0;
-        int liveSecond = 0;
-        int liveFirst = 0;
-        int liveGeneralFirst = 0;
-        int liveGeneralSecond = 0;
-
-        for (int column = 0; column < Board.COLUMNS; column++) {
-            for (int row = 0; row < Board.ROWS; row++) {
-                Unit unit = gameState.getBoard().getUnit(column, row);
-                if (unit.isAlive()) {
-                    if (unit.getPlayerType() == PlayerType.FIRST_PLAYER) {
-                        firstHp += unit.getCurrentHp();
-                        liveFirst++;
-                        if (unit.isGeneral()) {
-                            liveGeneralFirst++;
-                        }
-                    } else if (unit.getPlayerType() == PlayerType.SECOND_PLAYER) {
-                        secondHp += unit.getCurrentHp();
-                        liveSecond++;
-                        if (unit.isGeneral()) {
-                            liveGeneralSecond++;
-                        }
-                    }
-                }
-            }
-        }
-        int allHp = firstHp + secondHp;
-
-        double perFirst = ((double) firstHp / allHp) * 100;
-        double perSecond = ((double) secondHp / allHp) * 100;
-
-        double valueFirst = (liveFirst * perFirst + liveGeneralFirst * 10) / ((liveSecond * 6 + liveGeneralSecond * 12) + 1);
-        double valueSecond = (liveSecond * perSecond + liveGeneralSecond * 10) / ((liveFirst * 6 + liveGeneralFirst * 12) + 1);
-
-        double result;
-        if (currentPlayerType == PlayerType.FIRST_PLAYER) {
-            result = (valueFirst - valueSecond) / (valueFirst + valueSecond);
-        } else {
-            result = (valueSecond - valueFirst) / (valueFirst + valueSecond);
-        }
-
-        return result;
-    }
-    private double knightTacticUtility(GameState gameState){
-        int firstHp = 0;
-        int secondHp = 0;
-        int liveSecond = 0;
-        int liveFirst = 0;
-        int liveGeneralFirst = 0;
-        int liveGeneralSecond = 0;
-
-        for (int column = 0; column < Board.COLUMNS; column++) {
-            for (int row = 0; row < Board.ROWS; row++) {
-                Unit unit = gameState.getBoard().getUnit(column, row);
-                if (unit.isAlive()) {
-                    if (unit.getPlayerType() == PlayerType.FIRST_PLAYER) {
-                        firstHp += unit.getCurrentHp();
-                        liveFirst++;
-                        if (unit.isGeneral()) {
-                            liveGeneralFirst++;
-                        }
-                    } else if (unit.getPlayerType() == PlayerType.SECOND_PLAYER) {
-                        secondHp += unit.getCurrentHp();
-                        liveSecond++;
-                        if (unit.isGeneral()) {
-                            liveGeneralSecond++;
-                        }
-                    }
-                }
-            }
-        }
-        int allHp = firstHp + secondHp;
-
-        double perFirst = ((double) firstHp / allHp) * 100;
-        double perSecond = ((double) secondHp / allHp) * 100;
-
-        double valueFirst = (liveFirst * perFirst + liveGeneralFirst * 10) / ((liveSecond * 6 + liveGeneralSecond * 12) + 1);
-        double valueSecond = (liveSecond * perSecond + liveGeneralSecond * 10) / ((liveFirst * 6 + liveGeneralFirst * 12) + 1);
-
-        double result;
-        if (currentPlayerType == PlayerType.FIRST_PLAYER) {
-            result = (valueFirst - valueSecond) / (valueFirst + valueSecond);
-        } else {
-            result = (valueSecond - valueFirst) / (valueFirst + valueSecond);
-        }
-
-        return result;
-
-    }
-    private double archerTacticUtility(GameState gameState){
-        int firstHp = 0;
-        int secondHp = 0;
-        int liveSecond = 0;
-        int liveFirst = 0;
-        int liveGeneralFirst = 0;
-        int liveGeneralSecond = 0;
-
-        for (int column = 0; column < Board.COLUMNS; column++) {
-            for (int row = 0; row < Board.ROWS; row++) {
-                Unit unit = gameState.getBoard().getUnit(column, row);
-                if (unit.isAlive()) {
-                    if (unit.getPlayerType() == PlayerType.FIRST_PLAYER) {
-                        firstHp += unit.getCurrentHp();
-                        liveFirst++;
-                        if (unit.isGeneral()) {
-                            liveGeneralFirst++;
-                        }
-                    } else if (unit.getPlayerType() == PlayerType.SECOND_PLAYER) {
-                        secondHp += unit.getCurrentHp();
-                        liveSecond++;
-                        if (unit.isGeneral()) {
-                            liveGeneralSecond++;
-                        }
-                    }
-                }
-            }
-        }
-        int allHp = firstHp + secondHp;
-
-        double perFirst = ((double) firstHp / allHp) * 100;
-        double perSecond = ((double) secondHp / allHp) * 100;
-
-        double valueFirst = (liveFirst * perFirst + liveGeneralFirst * 10) / ((liveSecond * 6 + liveGeneralSecond * 12) + 1);
-        double valueSecond = (liveSecond * perSecond + liveGeneralSecond * 10) / ((liveFirst * 6 + liveGeneralFirst * 12) + 1);
-
-        double result;
-        if (currentPlayerType == PlayerType.FIRST_PLAYER) {
-            result = (valueFirst - valueSecond) / (valueFirst + valueSecond);
-        } else {
-            result = (valueSecond - valueFirst) / (valueFirst + valueSecond);
-        }
-
-        return result;
-    }
-    private double healerTacticUtility(GameState gameState){
-        int firstHp = 0;
-        int secondHp = 0;
-        int liveSecond = 0;
-        int liveFirst = 0;
-        int liveGeneralFirst = 0;
-        int liveGeneralSecond = 0;
-
-        for (int column = 0; column < Board.COLUMNS; column++) {
-            for (int row = 0; row < Board.ROWS; row++) {
-                Unit unit = gameState.getBoard().getUnit(column, row);
-                if (unit.isAlive()) {
-                    if (unit.getPlayerType() == PlayerType.FIRST_PLAYER) {
-                        firstHp += unit.getCurrentHp();
-                        liveFirst++;
-                        if (unit.isGeneral()) {
-                            liveGeneralFirst++;
-                        }
-                    } else if (unit.getPlayerType() == PlayerType.SECOND_PLAYER) {
-                        secondHp += unit.getCurrentHp();
-                        liveSecond++;
-                        if (unit.isGeneral()) {
-                            liveGeneralSecond++;
-                        }
-                    }
-                }
-            }
-        }
-        int allHp = firstHp + secondHp;
-
-        double perFirst = ((double) firstHp / allHp) * 100;
-        double perSecond = ((double) secondHp / allHp) * 100;
-
-        double valueFirst = (liveFirst * perFirst + liveGeneralFirst * 10) / ((liveSecond * 6 + liveGeneralSecond * 12) + 1);
-        double valueSecond = (liveSecond * perSecond + liveGeneralSecond * 10) / ((liveFirst * 6 + liveGeneralFirst * 12) + 1);
-
-        double result;
-        if (currentPlayerType == PlayerType.FIRST_PLAYER) {
-            result = (valueFirst - valueSecond) / (valueFirst + valueSecond);
-        } else {
-            result = (valueSecond - valueFirst) / (valueFirst + valueSecond);
-        }
-
-        return result;
-    }
-
-
-    public double calculateProfit(UnitType takeUnit, AttackType attackType){
+    /**
+     * Метод, вычисляющий полезность данного юнита в зависимости от его положения
+     * на игровом поле и его типа
+     * @param takeUnit Тип рассматриваемого юнита.
+     * @param attackType Тип атаки рассматриваемого юнита.
+     * @return Значение полезности данного юнита.
+     */
+    private double calculateProfit(UnitType takeUnit, AttackType attackType){
         Unit unit = null;
         switch (takeUnit){
             case KNIGHT -> unit = new Knight(getCurrentPlayerType());
@@ -392,7 +211,6 @@ public class TacticUtility implements UtilityFunction{
         return resultProfit;
     }
 
-    @SneakyThrows
     public double monteCarloAlg(GameState root, int countGame, PlaceUnitEvent placeUnit){
         double countWin = 0;
         RandomBot bot1 = new RandomBot();
@@ -403,27 +221,25 @@ public class TacticUtility implements UtilityFunction{
 
         List<RecursiveTask<Double>> recursiveTasks = new ArrayList<>();
         for (int numGame = 0; numGame < countGame; numGame++) {
-            int finalNumGame = numGame;
             RecursiveTask<Double> task = new RecursiveTask<>() {
                 @SneakyThrows
                 @Override
                 protected Double compute() {
-                    GameState gameStateNode = root.getCopy();
-                    GameState gameState = gameStateNode;
+                    GameState gameState = root.getCopy();
                     int countStrike = 0;
                     int isAliveMod = 1;
                     int modWinner = 0;
 
 
-                    executePlace(gameState, finalNumGame, bot1, bot2);
+                    executePlace(gameState, bot1, bot2);
                     gameState.changeCurrentPlayer();
-                    executePlace(gameState, finalNumGame, bot1, bot2);
+                    executePlace(gameState, bot1, bot2);
                     gameState.changeCurrentPlayer();
 
                     while (gameState.getGameStage() != GameStage.ENDED) {
-                        executeMove(gameState, finalNumGame, bot1, bot2);
+                        executeMove(gameState, bot1, bot2);
                         gameState.makeChangePlayer(new ChangePlayerEvent(gameState.getCurrentPlayer()));
-                        executeMove(gameState, finalNumGame, bot1, bot2);
+                        executeMove(gameState, bot1, bot2);
                         if(gameState.getCurrentBoard().getUnit(x,y).isHitTarget()){
                             countStrike++;
                         }
@@ -437,8 +253,6 @@ public class TacticUtility implements UtilityFunction{
                         modWinner = 1;
                     }
 
-
-                    //return (double) (countStrike*isAliveMod);
                     return (double) modWinner;
 
                 }
@@ -454,12 +268,29 @@ public class TacticUtility implements UtilityFunction{
             countWin+=task;
         }
 
-        return (double) countWin / countGame;
+        return countWin / countGame;
     }
 
+    @Override
+    public List<MakeMoveEvent> changeMoveByTactic(GameState gameState, List<MakeMoveEvent> moveEvents) {
+        List<MakeMoveEvent> movesRoot = moveEvents;
+            if (enumerationMovedUnits(gameState) < enumerationTypeUnits(gameState, UnitType.KNIGHT)) {
+                movesRoot = cleanerByAttacker(UnitType.KNIGHT, movesRoot);
+            } else if (enumerationMovedUnits(gameState) < enumerationTypeUnits(gameState, UnitType.ARCHER)) {
+                movesRoot = cleanerByAttacker(UnitType.ARCHER, movesRoot);
+            } else if (enumerationMovedUnits(gameState) < enumerationTypeUnits(gameState, UnitType.HEALER)) {
+                movesRoot = cleanerByAttacker(UnitType.HEALER, movesRoot);
+            }
+        return movesRoot;
+    }
 
-
-    public void executeMove(GameState gameState, int countGame, Bot botFirst, Bot botSecond)
+    /**
+     * Метод, выполняющий действия ботов в алгоритме Монте-Карло
+     * @param gameState Игровое состояние.
+     * @param botFirst Бот в позиции Первого игрока.
+     * @param botSecond Бот в позиции Второго игрока.
+     */
+    public void executeMove(GameState gameState, Bot botFirst, Bot botSecond)
             throws GameException{
         for (int i = 0; i < 6; i++) {
             if (gameState.getCurrentPlayer() == PlayerType.FIRST_PLAYER) {
@@ -492,8 +323,14 @@ public class TacticUtility implements UtilityFunction{
         }
     }
 
-    public void executePlace(GameState gameState, int countGame, Bot botFirst, Bot botSecond)
-            throws GameException, InterruptedException {
+    /**
+     * Метод, выполняющий расстановку ботов в алгоритме Монте-Карло
+     * @param gameState Игровое состояние.
+     * @param botFirst Бот в позиции Первого игрока.
+     * @param botSecond Бот в позиции Второго игрока.
+     */
+    public void executePlace(GameState gameState, Bot botFirst, Bot botSecond)
+            throws GameException {
             if (gameState.getCurrentPlayer() == PlayerType.FIRST_PLAYER) {
                 for (int i = 0; i < 6; i++) {
                     PlaceUnitEvent event = botFirst.generatePlaceUnitEvent(gameState);
@@ -512,6 +349,83 @@ public class TacticUtility implements UtilityFunction{
                 }
             }
         }
+
+    /**
+     * Метод, возвращающий количество живых и походивших юнитов
+     * @param gameState Игровое состояние.
+     * @return Количество живых и походивших юнитов
+     */
+    private Integer enumerationMovedUnits(GameState gameState) {
+        int countMovedUnits = 0;
+        if (currentPlayerType == PlayerType.FIRST_PLAYER) {
+            for(int column = 0; column<Board.COLUMNS;column++){
+                for(int row = 0; row< Board.ROWS/2;row++){
+                    if(gameState.getCurrentBoard().getUnit(column,row).isMoved() &&
+                            gameState.getCurrentBoard().getUnit(column,row).isAlive()){
+                        countMovedUnits++;
+                    }
+                }
+            }
+        } else {
+            for(int column = 0; column<Board.COLUMNS;column++){
+                for(int row = Board.ROWS/2; row< Board.ROWS;row++){
+                    if(gameState.getCurrentBoard().getUnit(column,row).isMoved() &&
+                            gameState.getCurrentBoard().getUnit(column,row).isAlive()){
+                        countMovedUnits++;
+                    }
+                }
+            }
+        }
+        return countMovedUnits;
+    }
+
+    /**
+     * Метод, возвращающий количество живых юнитов определённого типа
+     * @param gameState Игровое состояние.
+     * @param unitType Тип рассматриваемого юнита
+     * @return Количество живых юнитов определённого типа
+     */
+    private Integer enumerationTypeUnits(GameState gameState, UnitType unitType) {
+        int countTypeUnits = 0;
+        if (currentPlayerType == PlayerType.FIRST_PLAYER) {
+            for(int column = 0; column<Board.COLUMNS;column++){
+                for(int row = 0; row< Board.ROWS/2;row++){
+                    if(gameState.getCurrentBoard().getUnit(column,row).getUnitType() == unitType &&
+                            gameState.getCurrentBoard().getUnit(column,row).isAlive()){
+                        countTypeUnits++;
+                    }
+                }
+            }
+        } else {
+            for(int column = 0; column<Board.COLUMNS;column++){
+                for(int row = Board.ROWS/2; row< Board.ROWS;row++){
+                    if(gameState.getCurrentBoard().getUnit(column,row).getUnitType() == unitType &&
+                            gameState.getCurrentBoard().getUnit(column,row).isAlive()){
+                        countTypeUnits++;
+                    }
+                }
+            }
+        }
+        return countTypeUnits;
+    }
+
+    /**
+     * Метод, очищающий список действий от действий, совершаемые отличным от определённого
+     * типом юнита.
+     * @param unitType Тип юнита, действия которого остануться в списке.
+     * @param movesRoot Список всех действий игрока.
+     * @return Список с действиями, совершёнными только определённым типом юнита.
+     */
+    private List<MakeMoveEvent> cleanerByAttacker(UnitType unitType, List<MakeMoveEvent> movesRoot) {
+        List<MakeMoveEvent> tmpList = new ArrayList<>();
+        for(MakeMoveEvent moveEvent : movesRoot){
+            if(moveEvent.getAttacker().getUnitType() == unitType){
+                tmpList.add(moveEvent);
+            }
+        }
+        return tmpList;
+    }
+
 
 
 

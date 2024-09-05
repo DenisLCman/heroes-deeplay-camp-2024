@@ -1,5 +1,6 @@
 package io.deeplay.camp.game.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.deeplay.camp.game.mechanics.PlayerType;
 import lombok.NoArgsConstructor;
 
@@ -26,4 +27,11 @@ public class Archer extends Unit {
     }
     isMoved = true;
   }
+
+  @JsonIgnore
+  @Override
+  public Unit getCopy() {
+    return new Archer(this);
+  }
+
 }

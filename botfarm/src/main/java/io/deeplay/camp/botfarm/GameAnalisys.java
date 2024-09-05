@@ -23,6 +23,8 @@ public class GameAnalisys {
   int[][] favorHealerSecond;
   int[][] favorArcherSecond;
   int[][] favorMageSecond;
+  int[] cntRound;
+  int[][] countLived;
   UnitType[][] generalType;
   PlayerType[] winners;
   long[][] avgTimeMove;
@@ -44,8 +46,10 @@ public class GameAnalisys {
     favorArcherSecond = new int[countGame][3];
     favorMageSecond = new int[countGame][3];
     generalType = new UnitType[countGame][2];
+    cntRound = new int[countGame];
     winners = new PlayerType[countGame];
     avgTimeMove = new long[countGame][2];
+    countLived = new int[countGame][2];
     this.gameId = gameId;
     String path = "C:\\Deeplay\\heroes-deeplay-camp-2024\\botfarm\\src\\main\\java\\io\\deeplay\\camp\\botfarm";
     fileOutput = new File(path + "\\resultgame"+gameId+".txt");
@@ -93,6 +97,18 @@ public class GameAnalisys {
     favorArcherSecond[countGame][0] = archerCount[1];
     favorHealerSecond[countGame][0] = healerCount[1];
     favorMageSecond[countGame][0] = mageCount[1];
+    cntRound[countGame] = 10 - gameState.getCountRound();
+    for(Unit unit : gameState.getArmyFirst().getUnits()){
+      if(unit.isAlive()){
+        countLived[countGame][0]++;
+      }
+    }
+    for(Unit unit : gameState.getArmySecond().getUnits()){
+      if(unit.isAlive()){
+        countLived[countGame][1]++;
+      }
+    }
+
   }
 
   // Выводит информацию о всех прошедших играх
@@ -134,6 +150,9 @@ public class GameAnalisys {
     writer.append(String.format("%-" + tab2 + "s", "CountMa2"));
     writer.append(String.format("%-" + tab2 + "s", "CountHe2"));
     writer.append(String.format("%-" + tab2 + "s", "AvgMoBot"));
+    writer.append(String.format("%-" + tab2 + "s", "CntWinRo"));
+    writer.append(String.format("%-" + tab2 + "s", "LiveFirs"));
+    writer.append(String.format("%-" + tab2 + "s", "LiveSeco"));
 
     for (int i = 0; i < countGame; i++) {
       writer.append(separator);
@@ -150,6 +169,9 @@ public class GameAnalisys {
       writer.append(String.format("%-" + tab + "d", favorMageSecond[i][0]));
       writer.append(String.format("%-" + tab + "d", favorHealerSecond[i][0]));
       writer.append(String.format("%-" + tab + "f", (float)avgTimeMove[i][0]/avgTimeMove[i][1]));
+      writer.append(String.format("%-" + tab + "d", cntRound[i]));
+      writer.append(String.format("%-" + tab + "d", countLived[i][0]));
+      writer.append(String.format("%-" + tab + "d", countLived[i][1]));
     }
     writer.append(separator);
     writer.close();
