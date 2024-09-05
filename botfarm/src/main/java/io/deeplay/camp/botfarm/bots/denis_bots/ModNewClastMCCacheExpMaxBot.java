@@ -243,10 +243,11 @@ public class ModNewClastMCCacheExpMaxBot extends Bot {
                         bestCluster = cluster;
                         bestResult = bestMoveInCluster;
                     }
-                    //bestMoves.add(bestMoveInCluster);
                 }
             }
             bestMoves = bestCluster.points;
+            bestMoves.sort(Collections.reverseOrder());
+
 
 
             List<RecursiveTask<UtilityMoveResult>> recursiveTasks = new ArrayList<>();
@@ -262,9 +263,15 @@ public class ModNewClastMCCacheExpMaxBot extends Bot {
                 recursiveTasks.add(task);
 
             }
+
+
+
+
             List<UtilityMoveResult> results = ForkJoinTask.invokeAll(recursiveTasks).stream()
                     .map(ForkJoinTask::join)
                     .toList();
+
+
 
             return getMaxMoveFromTasks(results);
         }
@@ -275,7 +282,7 @@ public class ModNewClastMCCacheExpMaxBot extends Bot {
             return tacticUtility.getMoveUtility(root);
         }
         List<MakeMoveEvent> movesRoot = root.getPossibleMoves();
-        movesRoot = tacticUtility.changeMoveByTactic(root, movesRoot);
+        movesRoot = maxPlayer ? tacticUtility.changeMoveByTactic(root, movesRoot): movesRoot;
 
         List<UtilityMoveResult> points = new ArrayList<>();
         for (MakeMoveEvent move : movesRoot) {
@@ -300,6 +307,10 @@ public class ModNewClastMCCacheExpMaxBot extends Bot {
                 }
             }
         }
+        bestMoves.sort(Collections.reverseOrder());
+
+
+
 
         if(movesRoot.isEmpty()){
             if(root.getGameStage() == GameStage.ENDED){

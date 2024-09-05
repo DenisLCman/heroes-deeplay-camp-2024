@@ -147,9 +147,10 @@ public class BotFight extends Thread{
                     continue;
                 }
                 long endTimer = System.currentTimeMillis();
-                if(endTimer - startTimer > 500000){
+                if(endTimer - startTimer > 5000){
                     GiveUpEvent giveUpEvent = new GiveUpEvent(PlayerType.FIRST_PLAYER);
                     gameState.giveUp(giveUpEvent);
+                    System.out.println("Сдался первый игрок");
                 }
 
                 game.makeMove(event);
@@ -163,9 +164,10 @@ public class BotFight extends Thread{
                 }
                 long endTimer = System.currentTimeMillis();
                 gameAnalisys.reviewTimeMove(endTimer - startTimer, countGame);
-                if(endTimer - startTimer > 500000){
+                if(endTimer - startTimer > 5000){
                     GiveUpEvent giveUpEvent = new GiveUpEvent(PlayerType.SECOND_PLAYER);
                     gameState.giveUp(giveUpEvent);
+                    System.out.println("Сдался второй игрок");
                 }
 
                 game.makeMove(event);
