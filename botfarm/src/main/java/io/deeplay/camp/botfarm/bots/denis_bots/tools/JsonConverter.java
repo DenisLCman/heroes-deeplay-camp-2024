@@ -1,10 +1,13 @@
-package io.deeplay.camp.botfarm.bots.denis_bots;
+package io.deeplay.camp.botfarm.bots.denis_bots.tools;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+/**
+ * Класс, реализующий сериализацию и десериализацию данных
+ */
 public class JsonConverter {
 
   private static final ObjectMapper objectMapper = new ObjectMapper();

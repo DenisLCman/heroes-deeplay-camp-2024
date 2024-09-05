@@ -1,75 +1,29 @@
-package io.deeplay.camp.botfarm.bots.denis_bots;
+package io.deeplay.camp.botfarm.bots.denis_bots.movement_algorithm;
 
-import io.deeplay.camp.botfarm.bots.Bot;
-import io.deeplay.camp.botfarm.bots.RandomBot;
-import io.deeplay.camp.game.entities.UnitType;
+import io.deeplay.camp.botfarm.bots.denis_bots.UtilityFunction;
+import io.deeplay.camp.botfarm.bots.denis_bots.entities.UtilityMoveResult;
 import io.deeplay.camp.game.events.MakeMoveEvent;
-import io.deeplay.camp.game.events.PlaceUnitEvent;
 import io.deeplay.camp.game.exceptions.GameException;
 import io.deeplay.camp.game.mechanics.GameStage;
 import io.deeplay.camp.game.mechanics.GameState;
-import io.deeplay.camp.game.mechanics.PlayerType;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.SneakyThrows;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 
-public class ABMinMaxBot extends Bot {
-    private static final Logger logger = LoggerFactory.getLogger(RandomBot.class);
+public class ABMinMaxAlg {
+    final int originDepth;
     UtilityFunction tacticUtility;
-    int maxDepth;
-    @Setter
-    boolean firstPlaceInGame = true;
-
-    public ABMinMaxBot(PlayerType playerType, int maxDepth){
-        tacticUtility = new TacticUtility(BotTactic.BASE_TACTIC);
-        tacticUtility.setCurrentPlayerType(playerType);
-        this.maxDepth = maxDepth;
+    public ABMinMaxAlg(int maxDepth, UtilityFunction tacticUtility){
+        this.originDepth = maxDepth;
+        this.tacticUtility = tacticUtility;
     }
 
-    @Getter
-    @AllArgsConstructor
-    static class UtilityMoveResult {
-        double value;
-        MakeMoveEvent event;
+    public UtilityMoveResult getMoveResult(GameState gameState) {
 
-    }
-
-    @Getter
-    @AllArgsConstructor
-    static class UtilityPlaceResult {
-        double value;
-        PlaceUnitEvent place;
-
-    }
-
-    @Override
-    public PlaceUnitEvent generatePlaceUnitEvent(GameState gameState) {
-        List<PlaceUnitEvent> placeUnitEvents = gameState.getPossiblePlaces();
-        if(!placeUnitEvents.isEmpty()){
-            return placeUnitEvents.get((int)(Math.random()*placeUnitEvents.size()));
-        }
-        else{
-            return null;
-        }
-    }
-
-    @Override
-    public MakeMoveEvent generateMakeMoveEvent(GameState gameState) {
-        firstPlaceInGame = true;
-        return getMoveResult(gameState).event;
-    }
-
-    private UtilityMoveResult getMoveResult(GameState gameState) {
-
-        int originDepth = maxDepth;
+        int originDepth = this.originDepth;
         List<MakeMoveEvent> movesRoot = gameState.getPossibleMoves();
 
         if (movesRoot.isEmpty()) {
@@ -96,7 +50,7 @@ public class ABMinMaxBot extends Bot {
         }
     }
 
-    public double MinMaxAlg(GameState root, int depth, double alpha, double beta, boolean maxPlayer) throws GameException {
+    private double MinMaxAlg(GameState root, int depth, double alpha, double beta, boolean maxPlayer) throws GameException {
         if(depth == 0 || root.getGameStage() == GameStage.ENDED){
             return tacticUtility.getMoveUtility(root);
         }
@@ -135,13 +89,11 @@ public class ABMinMaxBot extends Bot {
     private UtilityMoveResult getMaxFromTasks(List<UtilityMoveResult> results){
         UtilityMoveResult bestValue = new UtilityMoveResult(Double.NEGATIVE_INFINITY, null);
         for (UtilityMoveResult task : results) {
-            if (bestValue.value < task.value) {
+            if (bestValue.getValue() < task.getValue()) {
                 bestValue = task;
             }
         }
         return bestValue;
     }
-
-
 
 }

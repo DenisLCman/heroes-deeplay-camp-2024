@@ -1,6 +1,7 @@
-package io.deeplay.camp.botfarm.bots.denis_bots;
+package io.deeplay.camp.botfarm.bots.denis_bots.tools;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.deeplay.camp.botfarm.bots.denis_bots.entities.PossibleStartState;
 import io.deeplay.camp.game.entities.Board;
 import io.deeplay.camp.game.mechanics.GameState;
 import io.deeplay.camp.game.mechanics.PlayerType;
@@ -9,6 +10,9 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Класс, сохранение данных в файл для последующего использования ботами
+ */
 public class GameStateCache implements Serializable {
 
     private static final long serialVersionUID = 1L;

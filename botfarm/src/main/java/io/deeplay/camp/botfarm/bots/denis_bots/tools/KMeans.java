@@ -1,9 +1,15 @@
-package io.deeplay.camp.botfarm.bots.denis_bots;
+package io.deeplay.camp.botfarm.bots.denis_bots.tools;
+
+import io.deeplay.camp.botfarm.bots.denis_bots.entities.UtilityMoveResult;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Класс, реализующий алгоритм Кластеризации
+ * KMeans++
+ */
 public class KMeans {
 
     private final Random random = new Random();
@@ -61,7 +67,7 @@ public class KMeans {
         }
         double sum = 0;
         for (UtilityMoveResult point : points) {
-            sum += point.value;
+            sum += point.getValue();
         }
         double average = sum / points.size();
 
@@ -69,11 +75,11 @@ public class KMeans {
     }
 
     private double calcDistance(UtilityMoveResult p1, UtilityMoveResult p2) {
-        return Math.abs(p1.value - p2.value);
+        return Math.abs(p1.getValue() - p2.getValue());
     }
 
     private boolean equals(UtilityMoveResult p1, UtilityMoveResult p2) {
-        return p1.value == p2.value;
+        return p1.getValue() == p2.getValue();
     }
 
     private UtilityMoveResult randCentroid() {

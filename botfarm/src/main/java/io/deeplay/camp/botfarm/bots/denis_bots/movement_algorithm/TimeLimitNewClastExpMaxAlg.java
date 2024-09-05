@@ -1,67 +1,40 @@
-package io.deeplay.camp.botfarm.bots.denis_bots;
+package io.deeplay.camp.botfarm.bots.denis_bots.movement_algorithm;
 
-import io.deeplay.camp.botfarm.bots.Bot;
-import io.deeplay.camp.botfarm.bots.RandomBot;
-import io.deeplay.camp.game.entities.*;
+import io.deeplay.camp.botfarm.bots.denis_bots.tools.KMeans;
+import io.deeplay.camp.botfarm.bots.denis_bots.UtilityFunction;
+import io.deeplay.camp.botfarm.bots.denis_bots.entities.UtilityMoveResult;
+import io.deeplay.camp.game.entities.Board;
+import io.deeplay.camp.game.entities.Position;
+import io.deeplay.camp.game.entities.StateChance;
 import io.deeplay.camp.game.events.MakeMoveEvent;
-import io.deeplay.camp.game.events.PlaceUnitEvent;
 import io.deeplay.camp.game.exceptions.GameException;
 import io.deeplay.camp.game.mechanics.GameStage;
 import io.deeplay.camp.game.mechanics.GameState;
 import io.deeplay.camp.game.mechanics.PlayerType;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.SneakyThrows;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.List;
 import java.util.ArrayList;
-
-import java.util.concurrent.CancellationException;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 
-public class ModClastExpMaxBot extends Bot {
-    private static final Logger logger = LoggerFactory.getLogger(RandomBot.class);
-    BotTactic botTactic;
+public class TimeLimitNewClastExpMaxAlg {
+    final int originDepth;
     UtilityFunction tacticUtility;
-    UnitType currentGeneral;
-    int maxDepth;
-    @Setter boolean firstPlaceInGame = true;
     double eps = 0.001;
-
-    public ModClastExpMaxBot(PlayerType playerType, int maxDepth){
-        tacticUtility = new TacticUtility(BotTactic.BASE_TACTIC);
-        tacticUtility.setCurrentPlayerType(playerType);
-        this.maxDepth = maxDepth;
+    public TimeLimitNewClastExpMaxAlg(int maxDepth, UtilityFunction tacticUtility){
+        this.originDepth = maxDepth;
+        this.tacticUtility = tacticUtility;
     }
 
 
-    @Override
-    public PlaceUnitEvent generatePlaceUnitEvent(GameState gameState) {
-        List<PlaceUnitEvent> placeUnitEvents = gameState.getPossiblePlaces();
-        if(!placeUnitEvents.isEmpty()){
-            return placeUnitEvents.get((int)(Math.random()*placeUnitEvents.size()));
-        }
-        else{
-            return null;
-        }
-    }
-
-    @Override
-    public MakeMoveEvent generateMakeMoveEvent(GameState gameState) {
-        firstPlaceInGame = true;
-
-        return getMoveResult(gameState).event;
-    }
-
-    private UtilityMoveResult getMoveResult(GameState gameState) {
-        int originDepth = maxDepth;
+    public UtilityMoveResult getMoveResult(GameState gameState) {
+        int originDepth = this.originDepth;
         List<MakeMoveEvent> movesRoot = gameState.getPossibleMoves();
         movesRoot = tacticUtility.changeMoveByTactic(gameState, movesRoot);
-
+        long timeToThink = 4000;
+        long startTimeToThink = System.currentTimeMillis();
         if (movesRoot.isEmpty()) {
             return new UtilityMoveResult(Double.NEGATIVE_INFINITY, null);
         } else {
@@ -71,46 +44,66 @@ public class ModClastExpMaxBot extends Bot {
                 points.add(features);
             }
             KMeans kMeans = new KMeans();
-            int numClusters = Math.min(5, movesRoot.size());  // количество кластеров можно варьировать
+            int numClusters = Math.min(5, movesRoot.size());
             List<KMeans.Cluster> clusters = kMeans.kMeansCluster(points, numClusters, 100);
 
 
             List<UtilityMoveResult> bestMoves = new ArrayList<>();
 
+            UtilityMoveResult bestResult = new UtilityMoveResult(Double.NEGATIVE_INFINITY, null);
+            KMeans.Cluster bestCluster = null;
             for (KMeans.Cluster cluster : clusters) {
                 UtilityMoveResult bestMoveInCluster = getBestMoveInCluster(points ,cluster, movesRoot, gameState, true);
-                if(bestMoveInCluster.event != null) {
-                    bestMoves.add(bestMoveInCluster);
+                if(bestMoveInCluster.getEvent() != null) {
+                    if(bestMoveInCluster.getValue() > bestResult.getValue()){
+                        bestCluster = cluster;
+                        bestResult = bestMoveInCluster;
+                    }
                 }
             }
+            bestMoves = bestCluster.points;
+            bestMoves.sort(Collections.reverseOrder());
+
+
 
             List<RecursiveTask<UtilityMoveResult>> recursiveTasks = new ArrayList<>();
             for (UtilityMoveResult moveBestClast : bestMoves) {
+                List<UtilityMoveResult> finalBestMoves = bestMoves;
                 RecursiveTask<UtilityMoveResult> task = new RecursiveTask<>() {
                     @SneakyThrows
                     @Override
                     protected UtilityMoveResult compute() {
-                        double result = expectMaxAlg(gameState, moveBestClast.event, originDepth, true, 1);
-                        return new UtilityMoveResult(result, moveBestClast.event);
+                        long endTimeToThink = System.currentTimeMillis();
+                        if(endTimeToThink - startTimeToThink > timeToThink){
+                            return new UtilityMoveResult(Double.NEGATIVE_INFINITY, null);
+                        }
+                        else {
+                            double result = expectMaxAlg(gameState, moveBestClast.getEvent(), originDepth, true, 1, timeToThink / finalBestMoves.size());
+                            return new UtilityMoveResult(result, moveBestClast.getEvent());
+                        }
                     }
                 };
                 recursiveTasks.add(task);
 
             }
+
             List<UtilityMoveResult> results = ForkJoinTask.invokeAll(recursiveTasks).stream()
                     .map(ForkJoinTask::join)
                     .toList();
 
-            return getMaxFromTasks(results);
+
+
+            return getMaxMoveFromTasks(results);
         }
     }
 
-    public double alphaBetaMinMaxAlg(GameState root, int depth, boolean maxPlayer, double p) {
+    private double minMaxAlg(GameState root, int depth, boolean maxPlayer, double p, long timeToThink) {
         if(depth == 0 || root.getGameStage() == GameStage.ENDED || p < eps){
             return tacticUtility.getMoveUtility(root);
         }
         List<MakeMoveEvent> movesRoot = root.getPossibleMoves();
-        movesRoot = tacticUtility.changeMoveByTactic(root, movesRoot);
+        movesRoot = maxPlayer ? tacticUtility.changeMoveByTactic(root, movesRoot): movesRoot;
+        long startTimeToThink = System.currentTimeMillis();
 
         List<UtilityMoveResult> points = new ArrayList<>();
         for (MakeMoveEvent move : movesRoot) {
@@ -118,17 +111,25 @@ public class ModClastExpMaxBot extends Bot {
             points.add(features);
         }
         KMeans kMeans = new KMeans();
-        int numClusters = Math.min(5, movesRoot.size());  // количество кластеров можно варьировать
+        int numClusters = Math.min(5, movesRoot.size());
         List<KMeans.Cluster> clusters = kMeans.kMeansCluster(points, numClusters, 100);
 
         List<UtilityMoveResult> bestMoves = new ArrayList<>();
 
+        UtilityMoveResult bestResult = new UtilityMoveResult(Double.NEGATIVE_INFINITY, null);
+        KMeans.Cluster bestCluster = null;
         for (KMeans.Cluster cluster : clusters) {
             UtilityMoveResult bestMoveInCluster = getBestMoveInCluster(points ,cluster, movesRoot, root, maxPlayer);
-            if(bestMoveInCluster.event != null) {
-                bestMoves.add(bestMoveInCluster);
+            if(bestMoveInCluster.getEvent() != null) {
+                if(bestMoveInCluster.getValue() > bestResult.getValue()){
+                    bestCluster = cluster;
+                    bestResult = bestMoveInCluster;
+                    bestMoves = bestCluster.points;
+                }
             }
         }
+        bestMoves.sort(Collections.reverseOrder());
+
 
         if(movesRoot.isEmpty()){
             if(root.getGameStage() == GameStage.ENDED){
@@ -137,16 +138,23 @@ public class ModClastExpMaxBot extends Bot {
             else {
                 GameState gameStateNode = root.getCopy();
                 gameStateNode.changeCurrentPlayer();
-                return alphaBetaMinMaxAlg(gameStateNode, depth, !maxPlayer, p);
+                return minMaxAlg(gameStateNode, depth, !maxPlayer, p, timeToThink);
             }
         } else {
             List<RecursiveTask<UtilityMoveResult>> recursiveTasks = new ArrayList<>();
             for (UtilityMoveResult moveEvent : bestMoves) {
+                List<UtilityMoveResult> finalBestMoves = bestMoves;
                 RecursiveTask<UtilityMoveResult> task = new RecursiveTask<>() {
                     @Override
                     protected UtilityMoveResult compute() {
                         try {
-                            return new UtilityMoveResult(expectMaxAlg(root, moveEvent.event, depth, maxPlayer, p), moveEvent.event);
+                            long endTimeToThink = System.currentTimeMillis();
+                            if(endTimeToThink - startTimeToThink > timeToThink){
+                                return new UtilityMoveResult(maxPlayer ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY, null);
+                            }
+                            else{
+                                return new UtilityMoveResult(expectMaxAlg(root, moveEvent.getEvent(), depth, maxPlayer, p, timeToThink/ finalBestMoves.size()), moveEvent.getEvent());
+                            }
                         } catch (GameException e) {
                             throw new RuntimeException(e);
                         }
@@ -158,16 +166,16 @@ public class ModClastExpMaxBot extends Bot {
                     .map(ForkJoinTask::join)
                     .toList();
 
-            return maxPlayer ? getMaxFromTasks(results).getValue() : getMinFromTasks(results).getValue();
+            return maxPlayer ? getMaxMoveFromTasks(results).getValue() : getMinMoveFromTasks(results).getValue();
         }
     }
 
-    private double expectMaxAlg(GameState root, MakeMoveEvent event, int depth, boolean maxPlayer, double p) throws GameException {
+    private double expectMaxAlg(GameState root, MakeMoveEvent event, int depth, boolean maxPlayer, double p, long timeToThink) throws GameException {
         List<StateChance> chancesRoot = root.getPossibleState(event);
         double excepted = 0;
         for (StateChance chance : chancesRoot) {
             GameState nodeGameState = chance.gameState().getCopy();
-            double v = alphaBetaMinMaxAlg(nodeGameState, depth-1, maxPlayer, p*chance.chance());
+            double v = minMaxAlg(nodeGameState, depth-1, maxPlayer, p*chance.chance(), timeToThink);
             excepted += chance.chance() * v;
         }
         return excepted;
@@ -183,10 +191,10 @@ public class ModClastExpMaxBot extends Bot {
         return new UtilityMoveResult(tacticUtility.getMoveUtility(gameStateNode), move);
     }
 
-    private UtilityMoveResult getMaxFromTasks(List<UtilityMoveResult> results){
+    private UtilityMoveResult getMaxMoveFromTasks(List<UtilityMoveResult> results){
         UtilityMoveResult bestValue = new UtilityMoveResult(Double.NEGATIVE_INFINITY, null);
         for (UtilityMoveResult task : results) {
-            if (bestValue.value < task.value) {
+            if (bestValue.getValue() < task.getValue()) {
                 bestValue = task;
             }
         }
@@ -194,17 +202,17 @@ public class ModClastExpMaxBot extends Bot {
         return bestValue;
     }
 
-    private UtilityMoveResult getMinFromTasks(List<UtilityMoveResult> results){
+    private UtilityMoveResult getMinMoveFromTasks(List<UtilityMoveResult> results){
         UtilityMoveResult bestValue = new UtilityMoveResult(Double.POSITIVE_INFINITY, null);
         for (UtilityMoveResult task : results) {
-            if (task.value < bestValue.value) {
+            if (task.getValue() < bestValue.getValue()) {
                 bestValue = task;
             }
         }
         return bestValue;
     }
 
-    public List<Position> enumerationPlayerUnits(PlayerType playerType, Board board) {
+    private List<Position> enumerationPlayerUnits(PlayerType playerType, Board board) {
         List<Position> unitPositions = new ArrayList<>();
         if (playerType == PlayerType.FIRST_PLAYER) {
             unitPositions.addAll(board.enumerateUnits(0, Board.ROWS / 2));
@@ -222,7 +230,7 @@ public class ModClastExpMaxBot extends Bot {
                 @Override
                 protected UtilityMoveResult compute() {
                     MakeMoveEvent move = movesRoot.get(points.indexOf(point));
-                    double result = expectMaxAlg(gameState, move, 1, maxPlayer,1);
+                    double result = expectMaxAlg(gameState, move, 1, maxPlayer,1,5000);
                     return new UtilityMoveResult(result, move);
                 }
             };
@@ -233,6 +241,7 @@ public class ModClastExpMaxBot extends Bot {
                 .map(ForkJoinTask::join)
                 .toList();
 
-        return maxPlayer ? getMaxFromTasks(results) : getMinFromTasks(results);
+        return maxPlayer ? getMaxMoveFromTasks(results) : getMinMoveFromTasks(results);
     }
+
 }

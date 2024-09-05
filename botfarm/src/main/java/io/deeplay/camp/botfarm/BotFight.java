@@ -1,7 +1,7 @@
 package io.deeplay.camp.botfarm;
 
 import io.deeplay.camp.botfarm.bots.Bot;
-import io.deeplay.camp.botfarm.bots.denis_bots.GameStateCache;
+import io.deeplay.camp.botfarm.bots.denis_bots.tools.GameStateCache;
 import io.deeplay.camp.game.Game;
 import io.deeplay.camp.game.entities.Board;
 import io.deeplay.camp.game.entities.Unit;
@@ -89,11 +89,6 @@ public class BotFight extends Thread{
     }
 
     public void playGames() throws GameException, InterruptedException, IOException {
-        try {
-            gameStateCache = gameStateCache.loadCacheFromFile("hashStartGame.json");
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
 
         for (int gameCount = 0; gameCount < countGame; gameCount++) {
 
@@ -131,7 +126,6 @@ public class BotFight extends Thread{
             System.out.println("Завершение игры номер - " + gameCount);
         }
 
-        //gameStateCache.saveCacheToFile("hashMetricStartGame.json");
         if (outInfoGame) {
             gameAnalisys.outputInfo();
         }

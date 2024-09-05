@@ -1,18 +1,15 @@
 package io.deeplay.camp.botfarm;
 
 
-import io.deeplay.camp.botfarm.bots.RandomBot;
 import io.deeplay.camp.botfarm.bots.denis_bots.*;
-import io.deeplay.camp.botfarm.bots.matthew_bots.MatthewsBot;
-import io.deeplay.camp.botfarm.bots.matthew_bots.movement_stage.AlphaBetaMinimaxBot;
-import io.deeplay.camp.botfarm.bots.matthew_bots.movement_stage.MultiThreadExpectimaxBot;
-import io.deeplay.camp.botfarm.bots.matthew_bots.placement_stage.RandomPlacementBot;
-import io.deeplay.camp.game.exceptions.GameException;
+import io.deeplay.camp.botfarm.bots.denis_bots.entities.BotTactic;
+import io.deeplay.camp.botfarm.bots.denis_bots.movement_algorithm.OptNewClastExpMaxAlg;
+import io.deeplay.camp.botfarm.bots.denis_bots.placement_algorithm.MetricPlaceAlg;
+import io.deeplay.camp.botfarm.bots.denis_bots.ready_bots.ModClastMCPlaceExpMaxBot;
+import io.deeplay.camp.botfarm.bots.denis_bots.ready_bots.TimeLimitNewClastMCCacheExpMaxBot;
 import io.deeplay.camp.game.mechanics.GameState;
 import io.deeplay.camp.game.mechanics.PlayerType;
 
-import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -45,13 +42,11 @@ public class Main {
   }
 
   public static void BotFightFun() throws IOException {
-    StopThreadNewClastMetricPlaceExpMaxBot bot1 = new StopThreadNewClastMetricPlaceExpMaxBot(PlayerType.SECOND_PLAYER, 5);
-    ModNewClastExpMaxBot bot2 = new ModNewClastExpMaxBot(PlayerType.FIRST_PLAYER,4);
-
-    //ModNewClastMCCacheExpMaxBot bot2 = new ModNewClastMCCacheExpMaxBot(PlayerType.SECOND_PLAYER,5);
+    TimeLimitNewClastMCCacheExpMaxBot bot1 = new TimeLimitNewClastMCCacheExpMaxBot(PlayerType.FIRST_PLAYER, 4);
+    TimeLimitNewClastMCCacheExpMaxBot bot2 = new TimeLimitNewClastMCCacheExpMaxBot(PlayerType.SECOND_PLAYER,4);
 
     for(int i = 0; i<1;i++){
-      BotFight fight = new BotFight(bot2, bot1, 100, true);
+      BotFight fight = new BotFight(bot1, bot2, 100, true);
     }
   }
 
