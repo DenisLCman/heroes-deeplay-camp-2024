@@ -31,7 +31,7 @@ public class TimeLimitNewClastExpMaxAlg {
     final int originDepth;
     UtilityFunction tacticUtility;
     final double eps = 0.001;
-    final long timeForThink = 4000;
+    final long timeForThink = 3500;
     public TimeLimitNewClastExpMaxAlg(int maxDepth, UtilityFunction tacticUtility){
         this.originDepth = maxDepth;
         this.tacticUtility = tacticUtility;
@@ -84,7 +84,7 @@ public class TimeLimitNewClastExpMaxAlg {
                     protected UtilityMoveResult compute() {
                         long endTimeToThink = System.currentTimeMillis();
                         if(endTimeToThink - startTimeToThink > timeToThink){
-                            return new UtilityMoveResult(Double.NEGATIVE_INFINITY, null);
+                            return new UtilityMoveResult(tacticUtility.getMoveUtility(gameState), moveBestClast.getEvent());
                         }
                         else {
                             double result = expectMaxAlg(gameState, moveBestClast.getEvent(), originDepth, true, 1, timeToThink / finalBestMoves.size());
@@ -159,7 +159,7 @@ public class TimeLimitNewClastExpMaxAlg {
                         try {
                             long endTimeToThink = System.currentTimeMillis();
                             if(endTimeToThink - startTimeToThink > timeToThink){
-                                return new UtilityMoveResult(maxPlayer ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY, null);
+                                return new UtilityMoveResult(tacticUtility.getMoveUtility(root), moveEvent.getEvent());
                             }
                             else{
                                 return new UtilityMoveResult(expectMaxAlg(root, moveEvent.getEvent(), depth, maxPlayer, p, timeToThink/ finalBestMoves.size()), moveEvent.getEvent());

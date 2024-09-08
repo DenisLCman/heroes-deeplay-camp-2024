@@ -2,6 +2,7 @@ package io.deeplay.camp.botfarm.bots.denis_bots.ready_bots;
 
 import io.deeplay.camp.botfarm.bots.Bot;
 import io.deeplay.camp.botfarm.bots.denis_bots.entities.BotTactic;
+import io.deeplay.camp.botfarm.bots.denis_bots.movement_algorithm.OptNewClastExpMaxAlg;
 import io.deeplay.camp.botfarm.bots.denis_bots.tools.GameStateCache;
 import io.deeplay.camp.botfarm.bots.denis_bots.TacticUtility;
 import io.deeplay.camp.botfarm.bots.denis_bots.UtilityFunction;
