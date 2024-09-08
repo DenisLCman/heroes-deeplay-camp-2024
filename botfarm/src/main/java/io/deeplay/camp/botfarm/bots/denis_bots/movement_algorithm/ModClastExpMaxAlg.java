@@ -136,6 +136,7 @@ public class ModClastExpMaxAlg {
         }
     }
 
+
     private double expectMaxAlg(GameState root, MakeMoveEvent event, int depth, boolean maxPlayer, double p) throws GameException {
         List<StateChance> chancesRoot = root.getPossibleState(event);
         double excepted = 0;

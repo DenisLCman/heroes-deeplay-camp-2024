@@ -90,8 +90,6 @@ public class OptNewClastExpMaxAlg {
                     .toList();
 
 
-
-            System.out.println("Ход сделан!");
             return getMaxMoveFromTasks(results);
         }
     }

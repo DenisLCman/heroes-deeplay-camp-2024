@@ -4,7 +4,8 @@ import io.deeplay.camp.botfarm.bots.Bot;
 import io.deeplay.camp.botfarm.bots.denis_bots.entities.BotTactic;
 import io.deeplay.camp.botfarm.bots.denis_bots.TacticUtility;
 import io.deeplay.camp.botfarm.bots.denis_bots.UtilityFunction;
-import io.deeplay.camp.botfarm.bots.denis_bots.movement_algorithm.ModClastExpMaxAlg;
+import io.deeplay.camp.botfarm.bots.denis_bots.movement_algorithm.ABMinMaxAlg;
+import io.deeplay.camp.botfarm.bots.denis_bots.movement_algorithm.SimpleExpMaxAlg;
 import io.deeplay.camp.botfarm.bots.denis_bots.placement_algorithm.RandomPlaceAlg;
 import io.deeplay.camp.game.events.MakeMoveEvent;
 import io.deeplay.camp.game.events.PlaceUnitEvent;
@@ -15,10 +16,12 @@ import lombok.Setter;
 /**
  * Бот, использующий алгоритм ЭкспектиМакс, использующий:
  * Многопоточность,
- * Улучшенную кластеризацию,,
+ * Улучшенную кластеризацию,
+ * Расстановку взятую из Кэша расстановок, созданных через алгоритм Монте-Карло,
  * Отсечение по вероятностям,
+ * Ограничение по времени для нахождения оптимального хода.
  */
-public class ModClastExpMaxBot extends Bot {
+public class ABMinMaxBot extends Bot {
     /** Тактика для данной битвы */
     UtilityFunction tacticUtility;
     /** Максимальная глубина для построения дерева */
@@ -26,7 +29,7 @@ public class ModClastExpMaxBot extends Bot {
     /** Является ли эта расстановка первой? */
     @Setter boolean firstPlaceInGame = true;
     /** Алгоритм для игрового процесса */
-    ModClastExpMaxAlg movementAlg;
+    ABMinMaxAlg movementAlg;
     /** Алгоритм для фазы расстановки */
     RandomPlaceAlg placementAlg;
 
@@ -36,11 +39,11 @@ public class ModClastExpMaxBot extends Bot {
      * @param playerType Данная позиция игрока бота.
      * @param maxDepth Максимальная глубина дерева решений.
      */
-    public ModClastExpMaxBot(PlayerType playerType, int maxDepth){
+    public ABMinMaxBot(PlayerType playerType, int maxDepth){
         tacticUtility = new TacticUtility(BotTactic.BASE_TACTIC);
         tacticUtility.setCurrentPlayerType(playerType);
         this.maxDepth = maxDepth;
-        movementAlg = new ModClastExpMaxAlg(this.maxDepth, tacticUtility);
+        movementAlg = new ABMinMaxAlg(this.maxDepth, tacticUtility);
         placementAlg = new RandomPlaceAlg(tacticUtility);
     }
 
